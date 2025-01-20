@@ -26,7 +26,7 @@ Route::group(['prefix' => 'auth'], function () {
     });
 });
 
-Route::apiResource('roles', RoleController::class);
+Route::apiResource('roles', RoleController::class)->middleware('auth:sanctum');
 Route::get('permissions', [RoleController::class,'permissions']);
 
 

@@ -3,9 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Log;
 use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 
 class RoleController extends Controller
 {
@@ -62,6 +63,9 @@ class RoleController extends Controller
      */
     public function store(Request $request)
     {
+        $request->validate([
+            'name' => ['required', 'unique:roles'],
+        ]);
         Log::info('new role : '.json_encode($request->all()));
         $role = Role::create(['name' =>$request->name]);
         $role->syncPermissions($request->permissions);
@@ -73,19 +77,24 @@ class RoleController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        /* $users = User::role($roleName)->get(); // Assuming Spatie Laravel-Permission is used
+
+        foreach ($users as $user) {
+            // Revoke all tokens for the user
+            $user->tokens()->delete(); // Works for Sanctum and Passport
+        } */
+
+        $request->validate([
+            'name' => [
+                'required',
+                Rule::unique('roles')->ignore($id), // Exclude current role ID
+            ]
+        ]);
         Log::info('update role : '.json_encode($request->all()));
         $role = Role::findOrFail($id);
         $role->name = $request->name;
         $role->save();
         $role->syncPermissions($request->permissions);
         return 'Role bien Modifié';
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
     }
 }
