@@ -69,21 +69,16 @@ class RoleController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-
-
-    /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, string $id)
     {
-        //
+        Log::info('update role : '.json_encode($request->all()));
+        $role = Role::findOrFail($id);
+        $role->name = $request->name;
+        $role->save();
+        $role->syncPermissions($request->permissions);
+        return 'Role bien Modifié';
     }
 
     /**

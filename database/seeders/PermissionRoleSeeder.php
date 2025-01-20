@@ -15,8 +15,8 @@ class PermissionRoleSeeder extends Seeder
      */
     public function run(): void
     {
-
-        $permissions = ['role'];
+        //$permissions = ['role','permission'];
+        $permissions = ['role','permission'];
         $actions = ['list','create','update','show','delete'];
 
         //generate permissions
@@ -38,7 +38,5 @@ class PermissionRoleSeeder extends Seeder
         //  $role->syncPermissions($fullPermissions);
         // $user = User::find(1);
         // $user->assignRole($role);
-
-
     }
 }
