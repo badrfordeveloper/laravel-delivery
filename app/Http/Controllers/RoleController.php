@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
+use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Log;
 use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 
 class RoleController extends Controller
 {
@@ -25,6 +26,7 @@ class RoleController extends Controller
             $query->where($filter,$request->{$filter});
            }
         }
+        $query->orderBy('id','desc');
         $permissions = $query->paginate($request->itemsPerPage);
         return response()->json([
             'items' => $permissions->items(),
@@ -78,6 +80,19 @@ class RoleController extends Controller
         $role->name = $request->name;
         $role->save();
         $role->syncPermissions($request->permissions);
+
+
+
+        // Get all users with the specified role
+        $users = User::role($request->name)->get(); // Assuming Spatie Laravel-Permission is used
+                Log::info('update users : '.json_encode($users));
+
+        foreach ($users as $user) {
+            // Revoke all tokens for the user
+            $user->tokens()->delete(); // Works for Sanctum and Passport
+        }
+
+
         return 'Role bien Modifié';
     }
 
