@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller
 {
@@ -44,5 +46,19 @@ class UserController extends Controller
             'items' => $users->items(),
             'total' => $users->total(),
         ]);
+    }
+
+    public function store(Request $request)
+    {
+        Log::info('new role : '.json_encode($request->all()));
+
+        dd($request->all);
+        $request->validate([
+            'name' => ['required', 'unique:roles'],
+        ]);
+        Log::info('new role : '.json_encode($request->all()));
+        $role = Role::create(['name' =>$request->name]);
+        $role->syncPermissions($request->permissions);
+        return 'Role bien ajouté';
     }
 }
