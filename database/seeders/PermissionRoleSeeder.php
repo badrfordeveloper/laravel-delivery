@@ -15,8 +15,8 @@ class PermissionRoleSeeder extends Seeder
      */
     public function run(): void
     {
-        //$permissions = ['role','permission'];
-        $permissions = ['role','permission'];
+        $permissions = ['role','permission','user'];
+       // $permissions = ['user'];
         $actions = ['list','create','update','show','delete'];
 
         //generate permissions

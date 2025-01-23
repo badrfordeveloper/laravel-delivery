@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Spatie\Permission\Models\Role;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Log;
 use Spatie\Permission\Models\Permission;
 
@@ -15,22 +16,31 @@ class RoleController extends Controller
      */
     public function index(Request $request)
     {
-        $filters = ['guard_name'];
-        $query = Role::query();
+        $selectsFilters = [];
+        $textFilters = ['name'];
+        $query = Role::query()->excludeAdmin();
        /*  $query->with(['permissions' => function ($query) {
             $query->select('name'); // Define specific columns
         }]); */
         $query->with(['permissions:name']);
-        foreach ($filters  as $filter) {
+        foreach ($selectsFilters  as $filter) {
            if($request->has($filter) && !empty($request->{$filter})){
             $query->where($filter,$request->{$filter});
            }
         }
+        foreach ($textFilters  as $filter) {
+            if($request->has($filter) && !empty($request->{$filter})){
+             $query->where($filter,'like',$request->{$filter}."%");
+            }
+         }
+
+
+
         $query->orderBy('id','desc');
-        $permissions = $query->paginate($request->itemsPerPage);
+        $roles = $query->paginate($request->itemsPerPage);
         return response()->json([
-            'items' => $permissions->items(),
-            'total' => $permissions->total(),
+            'items' => $roles->items(),
+            'total' => $roles->total(),
         ]);
     }
 
@@ -57,6 +67,10 @@ class RoleController extends Controller
         ->toArray();
         return $result;
     }
+    public function rolesList(){
+       // return Role::excludeAdmin()->get(['id as value','name as title']);
+        return Role::get(['id as value','name as title']);
+    }
 
 
     /**
@@ -64,6 +78,9 @@ class RoleController extends Controller
      */
     public function store(Request $request)
     {
+        $request->validate([
+            'name' => ['required', 'unique:roles'],
+        ]);
         Log::info('new role : '.json_encode($request->all()));
         $role = Role::create(['name' =>$request->name]);
         $role->syncPermissions($request->permissions);
@@ -75,6 +92,12 @@ class RoleController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        $request->validate([
+            'name' => [
+                'required',
+                Rule::unique('roles')->ignore($id), // Exclude current role ID
+            ]
+        ]);
         Log::info('update role : '.json_encode($request->all()));
         $role = Role::findOrFail($id);
         $role->name = $request->name;
@@ -83,24 +106,11 @@ class RoleController extends Controller
 
 
 
-        // Get all users with the specified role
-        $users = User::role($request->name)->get(); // Assuming Spatie Laravel-Permission is used
-                Log::info('update users : '.json_encode($users));
-
+        // logout all users with this role
+        $users = User::role($request->name)->get();
         foreach ($users as $user) {
-            // Revoke all tokens for the user
             $user->tokens()->delete(); // Works for Sanctum and Passport
         }
-
-
         return 'Role bien Modifié';
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
     }
 }
