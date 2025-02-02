@@ -69,7 +69,7 @@ class RoleController extends Controller
     }
     public function rolesList(){
        // return Role::excludeAdmin()->get(['id as value','name as title']);
-        return Role::get(['id as value','name as title']);
+        return Role::get(['name as value','name as title']);
     }
 
 

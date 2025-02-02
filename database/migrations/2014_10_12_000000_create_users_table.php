@@ -19,6 +19,12 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->boolean('active')->default(false);
+            $table->string('phone')->nullable();
+            $table->string('store_name')->nullable();
+            $table->string('ville')->nullable();
+            $table->string('address')->nullable();
+            $table->string('bank_name')->nullable();
+            $table->string('rib')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
