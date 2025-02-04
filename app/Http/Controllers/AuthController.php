@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Validator;
+use Symfony\Component\HttpFoundation\Response;
 
 class AuthController extends Controller
 {
@@ -62,6 +63,13 @@ class AuthController extends Controller
         }
 
         $user = $request->user();
+
+        if(!$user->active){
+            return response()->json(['message' => 'Votre compte est inactif. Veuillez contacter le support.'], Response::HTTP_FORBIDDEN);
+        }
+
+
+
         $tokenResult = $user->createToken('Personal Access Token');
         $token = $tokenResult->plainTextToken;
 

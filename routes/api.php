@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Http\Request;
+use App\Http\Middleware\IsActive;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RoleController;
@@ -29,7 +30,7 @@ Route::group(['prefix' => 'auth'], function () {
 
 
 
-Route::middleware(['auth:sanctum'])->group(function () {
+Route::middleware(['auth:sanctum',IsActive::class])->group(function () {
     Route::apiResource('roles', RoleController::class);
     Route::get('permissions', [RoleController::class,'permissions']);
     Route::get('rolesList', [RoleController::class,'rolesList']);
