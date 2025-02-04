@@ -16,26 +16,14 @@ class RoleController extends Controller
      */
     public function index(Request $request)
     {
-        $selectsFilters = [];
         $textFilters = ['name'];
         $query = Role::query()->excludeAdmin();
-       /*  $query->with(['permissions' => function ($query) {
-            $query->select('name'); // Define specific columns
-        }]); */
         $query->with(['permissions:name']);
-        foreach ($selectsFilters  as $filter) {
-           if($request->has($filter) && !empty($request->{$filter})){
-            $query->where($filter,$request->{$filter});
-           }
-        }
         foreach ($textFilters  as $filter) {
             if($request->has($filter) && !empty($request->{$filter})){
              $query->where($filter,'like',$request->{$filter}."%");
             }
-         }
-
-
-
+        }
         $query->orderBy('id','desc');
         $roles = $query->paginate($request->itemsPerPage);
         return response()->json([

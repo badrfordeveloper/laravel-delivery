@@ -5,6 +5,7 @@ use App\Http\Middleware\IsActive;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\TarifController;
 use App\Http\Controllers\UserController;
 
 /*
@@ -35,6 +36,7 @@ Route::middleware(['auth:sanctum',IsActive::class])->group(function () {
     Route::get('permissions', [RoleController::class,'permissions']);
     Route::get('rolesList', [RoleController::class,'rolesList']);
     Route::apiResource('users', UserController::class);
+    Route::apiResource('tarifs', TarifController::class);
 
 });
 
