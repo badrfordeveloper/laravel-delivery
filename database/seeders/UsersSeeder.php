@@ -19,7 +19,7 @@ class UsersSeeder extends Seeder
             'firstName' =>"admiiin",
             'email' =>"admin@gmail.com",
             'active' =>true,
-            'password' =>bcrypt("admin@gmail.com"),
+            'password' =>bcrypt("said@123"),
         ]);
         $role = Role::create(['name' =>'admin']);
         $user2 = User::create([
@@ -27,7 +27,7 @@ class UsersSeeder extends Seeder
             'firstName' =>"manaager",
             'email' =>"manager@gmail.com",
             'active' =>false,
-            'password' =>bcrypt("manager@gmail.com"),
+            'password' =>bcrypt("said@123"),
         ]);
         $role2 = Role::create(['name' =>'manager']);
 

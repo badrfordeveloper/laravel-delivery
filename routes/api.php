@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use App\Http\Middleware\IsActive;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ColisController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TarifController;
 use App\Http\Controllers\UserController;
@@ -37,6 +38,7 @@ Route::middleware(['auth:sanctum',IsActive::class])->group(function () {
     Route::get('rolesList', [RoleController::class,'rolesList']);
     Route::apiResource('users', UserController::class);
     Route::apiResource('tarifs', TarifController::class);
+    Route::apiResource('colis', ColisController::class);
 
 });
 

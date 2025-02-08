@@ -12,7 +12,7 @@ class TarifController extends Controller
 {
     public function index(Request $request)
     {
-        $textFilters = ['destination'];
+        $textFilters = ['destination','prefix'];
         $query = Tarif::query();
         foreach ($textFilters  as $filter) {
             if($request->has($filter) && !empty($request->{$filter})){
@@ -33,11 +33,13 @@ class TarifController extends Controller
 
         $request->validate([
             'destination' => 'required|unique:tarifs',
+            'prefix' => 'required|unique:tarifs',
             'tarif' => 'required|numeric',
         ]);
 
         $item = new Tarif();
         $item->destination = $request->destination;
+        $item->prefix = $request->prefix;
         $item->tarif = $request->tarif;
         $item->save();
         return 'Tarif bien ajoutée';
@@ -51,17 +53,22 @@ class TarifController extends Controller
 
     public function update(Request $request, string $id)
     {
+        Log::info('update tarif : '.$id.' => '.json_encode($request->all()));
         $request->validate([
             'destination' => [
+                'required',
+                Rule::unique('tarifs')->ignore($id), // Exclude current user ID
+            ],
+            'prefix' => [
                 'required',
                 Rule::unique('tarifs')->ignore($id), // Exclude current user ID
             ],
             'tarif' => 'required|numeric',
         ]);
 
-        Log::info('update tarif : '.json_encode($request->all()));
         $item = Tarif::findOrFail($id);
         $item->destination = $request->destination;
+        $item->prefix = $request->prefix;
         $item->tarif = $request->tarif;
         $item->save();
 

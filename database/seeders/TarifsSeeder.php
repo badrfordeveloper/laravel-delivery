@@ -15,11 +15,13 @@ class TarifsSeeder extends Seeder
     {
        Tarif::create([
             'destination' =>"casablanca-anfa",
+            'prefix' =>"CAAF",
             'tarif' =>20
         ]);
        Tarif::create([
             'destination' =>"casablanca-zenata",
-            'tarif' =>15.5
+            'prefix' =>"CAZE",
+            'tarif' =>15
         ]);
     }
 }

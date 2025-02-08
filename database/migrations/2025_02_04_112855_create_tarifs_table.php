@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('destination');
             $table->float('tarif');
+            $table->string('prefix')->unique();
             $table->timestamps();
             $table->softDeletes();
         });

@@ -16,21 +16,21 @@ return new class extends Migration
             $table->string('code')->unique();
             $table->string('nom_client');
             $table->string('tel_client');
-            $table->string('tarif');
+            $table->decimal('frais_livraison');
+            $table->decimal('frais_livreur')->nullable();
             $table->string('destination');
             $table->string('adresse');
             $table->string('produit');
-            $table->string('montant');
-            $table->string('commentaire_vendeur');
-            $table->string('commentaire_livreur');
-            $table->string('essayage');
-            $table->string('ouvrir');
-            $table->string('echange');
-            $table->string('frais_livreur');
+            $table->decimal('montant');
+            $table->string('commentaire_vendeur')->nullable();
+            $table->boolean('essayage');
+            $table->boolean('ouvrir');
+            $table->boolean('echange');
+            $table->string('statut');
             $table->foreignId('tarif_id')->constrained();
-          /*   $table->foreignId('vendeur_id')->constrained();
-            $table->foreignId('livereu_id')->nullable()->constrained();
-            $table->foreignId('created_by')->nullable()->constrained(); */
+            $table->foreignId('vendeur_id')->constrained(  table: 'users', indexName: 'colis_vendeur_id' );
+            $table->foreignId('livreur_id')->nullable()->constrained(  table: 'users', indexName: 'colis_livreur_id' );
+            $table->foreignId('created_by')->constrained(  table: 'users', indexName: 'colis_creator_id' );
             $table->timestamps();
             $table->softDeletes();
         });
@@ -44,6 +44,9 @@ return new class extends Migration
         Schema::table('colis', function(Blueprint $table)
 		{
             $table->dropForeign(['tarif_id']);
+            $table->dropForeign(['vendeur_id']);
+            $table->dropForeign(['livreur_id']);
+            $table->dropForeign(['created_by']);
 		});
 
         Schema::dropIfExists('colis');
