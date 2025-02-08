@@ -18,7 +18,7 @@ class AuthController extends Controller
     * @param  [string] password_confirmation
     * @return [string] message
     */
-    public function register(Request $request)
+   /*  public function register(Request $request)
     {
         $request->validate([
             'name' => 'required|string',
@@ -45,7 +45,7 @@ class AuthController extends Controller
         else{
             return response()->json(['error'=>'Provide proper details']);
         }
-    }
+    } */
     public function login(Request $request)
     {
         $request->validate([
@@ -57,9 +57,9 @@ class AuthController extends Controller
         $credentials = request(['email','password']);
         if(!Auth::attempt($credentials))
         {
-        return response()->json([
-            'message' => 'Unauthorized'
-        ],401);
+            return response()->json([
+                'message' => 'Email ou mot de passe est incorrect'
+            ],422);
         }
 
         $user = $request->user();
