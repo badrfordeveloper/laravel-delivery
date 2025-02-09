@@ -15,11 +15,13 @@ class TarifsSeeder extends Seeder
     {
        Tarif::create([
             'destination' =>"casablanca-anfa",
+            'delai_livraison' =>"24h",
             'prefix' =>"CAAF",
             'tarif' =>20
         ]);
        Tarif::create([
             'destination' =>"casablanca-zenata",
+            'delai_livraison' =>"48h",
             'prefix' =>"CAZE",
             'tarif' =>15
         ]);

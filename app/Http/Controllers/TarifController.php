@@ -35,12 +35,14 @@ class TarifController extends Controller
             'destination' => 'required|unique:tarifs',
             'prefix' => 'required|unique:tarifs',
             'tarif' => 'required|numeric',
+            'delai_livraison' => 'required',
         ]);
 
         $item = new Tarif();
         $item->destination = $request->destination;
         $item->prefix = $request->prefix;
         $item->tarif = $request->tarif;
+        $item->delai_livraison = $request->delai_livraison;
         $item->save();
         return 'Tarif bien ajoutée';
     }
@@ -64,22 +66,24 @@ class TarifController extends Controller
                 Rule::unique('tarifs')->ignore($id), // Exclude current user ID
             ],
             'tarif' => 'required|numeric',
+            'delai_livraison' => 'required',
         ]);
 
         $item = Tarif::findOrFail($id);
         $item->destination = $request->destination;
         $item->prefix = $request->prefix;
         $item->tarif = $request->tarif;
+        $item->delai_livraison = $request->delai_livraison;
         $item->save();
 
         return 'Tarif bien modifiée';
     }
 
-    public function destroy($id)
+    /* public function destroy($id)
     {
         // Find the user by ID
         $item = Tarif::findOrFail($id);
         $item->delete();
         return  'Tarif bien supprimée' ;
-    }
+    } */
 }

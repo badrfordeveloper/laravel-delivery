@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('destination');
             $table->float('tarif');
             $table->string('prefix')->unique();
+            $table->string('delai_livraison');
             $table->timestamps();
             $table->softDeletes();
         });
