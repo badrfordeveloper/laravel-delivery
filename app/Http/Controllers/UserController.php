@@ -24,16 +24,17 @@ class UserController extends Controller
                     $query->where('name',$role);
                 });
             }
-            else if($request->has($filter) && !empty($request->{$filter})){
+            else if($filter == "active" &&  $request->has($filter) && $request->{$filter}!="" ){
                 $query->where($filterValue,$request->{$filter});
             }
         }
         foreach ($textFilters  as $filter) {
             if($filter =="fullName" && $request->has($filter) && !empty($request->{$filter})){
-                $query->where('users.lastName','like',$request->{$filter}."%")
-                        ->orWhere('users.firstName','like',$request->{$filter}."%");
+                $query->where(function ($query) use($request,$filter) {
+                    $query->where('users.lastName','like',$request->{$filter}."%")->orWhere('users.firstName','like',$request->{$filter}."%");
+                });
             }
-         }
+        }
         $query->orderBy('id','desc');
         $users = $query->paginate($request->itemsPerPage);
         return response()->json([
