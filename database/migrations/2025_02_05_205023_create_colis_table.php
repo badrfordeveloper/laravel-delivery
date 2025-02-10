@@ -27,6 +27,7 @@ return new class extends Migration
             $table->boolean('ouvrir');
             $table->boolean('echange');
             $table->string('statut');
+            $table->foreignId('ramassage_id')->nullable()->constrained();
             $table->foreignId('tarif_id')->constrained();
             $table->foreignId('vendeur_id')->constrained(  table: 'users', indexName: 'colis_vendeur_id' );
             $table->foreignId('livreur_id')->nullable()->constrained(  table: 'users', indexName: 'colis_livreur_id' );
@@ -43,6 +44,7 @@ return new class extends Migration
     {
         Schema::table('colis', function(Blueprint $table)
 		{
+            $table->dropForeign(['ramassage_id']);
             $table->dropForeign(['tarif_id']);
             $table->dropForeign(['vendeur_id']);
             $table->dropForeign(['livreur_id']);

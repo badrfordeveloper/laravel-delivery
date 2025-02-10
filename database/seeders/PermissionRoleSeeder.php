@@ -15,11 +15,11 @@ class PermissionRoleSeeder extends Seeder
      */
     public function run(): void
     {
-        $permissions = ['role','permission','user','tarif','colis','ramassage'];
+        $permissions = ['role','permission','tarif','user','colis','ramassage'];
        // $permissions = ['user'];
         $actions = ['list','create','update','show','delete'];
 
-        //generate permissions
+        //generate full permissions
         $fullPermissions = [];
         foreach ($actions as $action) {
             foreach ($permissions as $permission) {
@@ -33,8 +33,46 @@ class PermissionRoleSeeder extends Seeder
         }
 
         // create roles and assign existing permissions
-        $role = Role::where('name','admin')->first();
-        $role->givePermissionTo($fullPermissions);
+        $roleAdmin = Role::where('name','admin')->first();
+        $roleGestionnaire = Role::where('name','gestionnaire')->first();
+        $roleLivreur = Role::where('name','livreur')->first();
+        $roleVendeur = Role::where('name','vendeur')->first();
+
+
+        //generate gestionnaire permissions
+        $GestionnairePermissions = [];
+        foreach ($actions as $action) {
+            foreach ($permissions as $permission) {
+                if(in_array($permission,['role','permission','tarif']))
+                    continue;
+                $GestionnairePermissions[] = $permission.'.'.$action;
+            }
+        }
+        //generate livreur permissions
+        $livreurPermissions = [];
+        foreach ($actions as $action) {
+            foreach ($permissions as $permission) {
+                if(in_array($permission,['role','permission','tarif','user']))
+                    continue;
+                $livreurPermissions[] = $permission.'.'.$action;
+            }
+        }
+
+        //generate vendeur permissions
+        $vendeurPermissions = [];
+        foreach ($actions as $action) {
+            foreach ($permissions as $permission) {
+                if(in_array($permission,['role','permission','tarif','user']))
+                    continue;
+                $vendeurPermissions[] = $permission.'.'.$action;
+            }
+        }
+        $roleAdmin->givePermissionTo($fullPermissions);
+        $roleGestionnaire->givePermissionTo($GestionnairePermissions);
+        $roleLivreur->givePermissionTo($livreurPermissions);
+        $roleVendeur->givePermissionTo($vendeurPermissions);
+
+
         //  $role->syncPermissions($fullPermissions);
         // $user = User::find(1);
         // $user->assignRole($role);
