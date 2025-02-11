@@ -51,4 +51,18 @@ class User extends Authenticatable
         return $query->whereNot('users.id', 1);
     }
 
+    public function isAdmin(): bool
+    {
+        return $this->hasRole('admin');
+    }
+
+    public function isVendeur(): bool
+    {
+        return $this->hasRole('vendeur');
+    }
+    public function isLivreur(): bool
+    {
+        return $this->hasRole('livreur');
+    }
+
 }

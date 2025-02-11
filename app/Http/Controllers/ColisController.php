@@ -25,6 +25,11 @@ class ColisController extends Controller
                 $query->where($filter,'like',$request->{$filter}."%");
             }
         }
+        $user = auth()->user();
+        if($user->isVendeur()){
+            $query->where('vendeur_id',$user->id);
+        }
+
         $query->orderBy('id','desc');
         $result = $query->paginate($request->itemsPerPage);
         return response()->json([
