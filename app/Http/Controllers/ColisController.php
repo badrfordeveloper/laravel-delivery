@@ -19,8 +19,10 @@ class ColisController extends Controller
         $textFilters = ['code','statut','nom_client','tel_client'];
         $query = Colis::query();
         foreach ($textFilters  as $filter) {
-            if($request->has($filter) && !empty($request->{$filter})){
-             $query->where($filter,'like',$request->{$filter}."%");
+            if( $filter == 'tel_client' && $request->has($filter) && !empty($request->{$filter})){
+                $query->where($filter,'like',"%".$request->{$filter}."%");
+            }else if($request->has($filter) && !empty($request->{$filter})){
+                $query->where($filter,'like',$request->{$filter}."%");
             }
         }
         $query->orderBy('id','desc');
