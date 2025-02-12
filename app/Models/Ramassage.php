@@ -8,4 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 class Ramassage extends Model
 {
     use HasFactory;
+
+
+    public function colis()
+    {
+        return $this->hasMany(Colis::class);
+    }
 }

@@ -156,10 +156,6 @@ class ColisController extends Controller
         $item->essayage = $request->boolean('essayage');
         $item->ouvrir = $request->boolean('ouvrir');
         $item->echange = $request->boolean('echange');
-        $item->statut = 'EN_ATTENTE';
-        $item->vendeur_id = $request->user()->id;
-        $item->created_by = $request->user()->id;
-
         // retries if users generate the same code at the same time
         $tries= 0;
         $maxTries= 3;
@@ -176,7 +172,6 @@ class ColisController extends Controller
                     $item->save();
                     $tries = $maxTries;
                     Log::info('update code colis : '. $logCode.' => '.$item->code);
-
                     return 'Colis bien modifiée avec nouveau un code : '. $item->code;
                 }
                 $item->save();

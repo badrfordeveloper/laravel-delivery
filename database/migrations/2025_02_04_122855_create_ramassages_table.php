@@ -16,10 +16,10 @@ return new class extends Migration
             $table->string('code')->unique();
             $table->string('nom_vendeur');
             $table->string('tel_vendeur');
-            $table->decimal('frais_ramasseur')->nullable();
             $table->string('adresse');
             $table->integer('nombre_colis');
-            $table->integer('nombre_colis_ramasseur');
+            $table->integer('nombre_colis_ramasseur')->nullable();
+            $table->decimal('frais_ramasseur')->nullable();
             $table->string('statut');
             $table->foreignId('tarif_id')->constrained();
             $table->string('destination');
@@ -40,7 +40,7 @@ return new class extends Migration
 		{
             $table->dropForeign(['tarif_id']);
             $table->dropForeign(['vendeur_id']);
-            $table->dropForeign(['livreur_id']);
+            $table->dropForeign(['ramasseur_id']);
             $table->dropForeign(['created_by']);
 		});
 
