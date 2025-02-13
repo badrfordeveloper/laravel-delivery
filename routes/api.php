@@ -43,6 +43,7 @@ Route::middleware(['auth:sanctum',IsActive::class])->group(function () {
     Route::apiResource('colis', ColisController::class);
     Route::apiResource('ramassage', RamassageController::class);
     Route::get('colisForRamassage', [RamassageController::class,'colisForRamassage']);
+    Route::post('updateStatutRamassage', [RamassageController::class,'updateStatutRamassage']);
 
 
 });

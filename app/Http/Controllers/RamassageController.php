@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Colis;
 use App\Models\Tarif;
+use App\Models\History;
 use App\Models\Ramassage;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -18,7 +20,7 @@ class RamassageController extends Controller
     public function index(Request $request)
     {
         $textFilters = ['code','statut','nom_vendeur','tel_vendeur'];
-        $query = Ramassage::query();
+        $query = Ramassage::query()->with('histories');
         foreach ($textFilters  as $filter) {
             if( $filter == 'tel_vendeur' && $request->has($filter) && !empty($request->{$filter})){
                 $query->where($filter,'like',"%".$request->{$filter}."%");
@@ -102,8 +104,12 @@ class RamassageController extends Controller
             try {
                 $item->code = $this->generateCode("RAM");
                 $item->save();
-                $tries = $maxTries;
 
+                $history = new History();
+                $history->statut = 'EN_ATTENTE';
+                $item->histories()->save($history);
+
+                $tries = $maxTries;
             } catch (QueryException $e) {
                 logger('ramassage query exception'.$e->getMessage());
                 sleep(1);
@@ -128,7 +134,7 @@ class RamassageController extends Controller
     {
 
         // Find the latest code with the same prefix
-        $latestRamassage = Ramassage::where('code', 'like', $prefix . '%')
+        $latestRamassage = Ramassage::withTrashed()->where('code', 'like', $prefix . '%')
             ->orderBy('code', 'desc')
             ->first();
 
@@ -192,10 +198,47 @@ class RamassageController extends Controller
 
     public function destroy($id)
     {
+        Log::info('delete ramassage : '.$id);
+
         // Find the user by ID
         $item = Ramassage::findOrFail($id);
-        Colis::where('ramassage_id',$item->id)->update(['ramassage_id' => null]);
+        Colis::where('ramassage_id',$item->id)->update(['ramassage_id' => null,'statut' => "EN_ATTENTE"]);
         $item->delete();
         return  'Ramassage bien supprimée' ;
+    }
+
+    public function updateStatutRamassage(Request $request)
+    {
+        Log::info('updateStatutRamassage  : '.json_encode($request->all()));
+
+        // Find the user by ID
+        $item = Ramassage::findOrFail($request->id);
+        if($request->statut == "EN_COURS_RAMASSAGE"  &&  in_array($item->statut,["EN_ATTENTE"])){
+            $item->statut = $request->statut;
+            $item->save();
+            //update statut colis
+            Colis::where('ramassage_id',$item->id)->update(['statut' => $request->statut]);
+            //add to history
+            $history = new History();
+            $history->statut = $request->statut;
+            $item->histories()->save($history);
+        }
+        else if($request->statut == "RAMASSE"  &&  in_array($item->statut,["EN_COURS_RAMASSAGE"])){
+            $item->statut = $request->statut;
+            $item->nombre_colis_ramasseur = $request->nombre_colis_ramasseur;
+            $item->save();
+            //update statut colis
+            Colis::where('ramassage_id',$item->id)->update(['statut' => $request->statut]);
+            //add to history
+            $history = new History();
+            $history->statut = $request->statut;
+            $history->nombre_colis_ramasseur = $request->nombre_colis_ramasseur;
+            $item->histories()->save($history);
+        }
+        else{
+            return response()->json(['message' => 'Statut invalide'], 422);
+        }
+
+        return  'Statut bien modifiée' ;
     }
 }

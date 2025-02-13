@@ -104,7 +104,7 @@ class ColisController extends Controller
     {
 
         // Find the latest code with the same prefix
-        $latestColis = Colis::where('code', 'like', $prefix . '%')
+        $latestColis = Colis::withTrashed()->where('code', 'like', $prefix . '%')
             ->orderBy('code', 'desc')
             ->first();
 
@@ -197,6 +197,7 @@ class ColisController extends Controller
 
     public function destroy($id)
     {
+        Log::info('delete colis : '.$id);
         // Find the user by ID
         $item = Colis::findOrFail($id);
         $item->delete();
