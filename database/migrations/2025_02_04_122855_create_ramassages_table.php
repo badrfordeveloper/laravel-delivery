@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('adresse');
             $table->integer('nombre_colis');
             $table->integer('nombre_colis_ramasseur')->nullable();
+            $table->dateTime('date_reporte')->nullable();
             $table->decimal('frais_ramasseur')->nullable();
             $table->string('statut');
             $table->foreignId('tarif_id')->constrained();

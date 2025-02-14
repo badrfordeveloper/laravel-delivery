@@ -91,7 +91,6 @@ class RamassageController extends Controller
         $item->destination = $tarif->destination;
         $item->adresse = $request->adresse;
         $item->nombre_colis = count($request->colis);
-        $item->nombre_colis_ramasseur = count($request->colis);
 
         $item->statut = 'EN_ATTENTE';
         $item->vendeur_id = $request->user()->id;
@@ -178,6 +177,8 @@ class RamassageController extends Controller
 
         $item->nom_vendeur = $request->nom_vendeur;
         $item->tel_vendeur = $request->tel_vendeur;
+        $item->adresse = $request->adresse;
+        $item->nombre_colis = count($request->colis);
         if($request->tarif_id != $item->tarif_id ){
             $tarif = Tarif::find($request->tarif_id);
             $item->tarif_id = $tarif->id;
@@ -223,7 +224,7 @@ class RamassageController extends Controller
             $history->statut = $request->statut;
             $item->histories()->save($history);
         }
-        else if($request->statut == "RAMASSE"  &&  in_array($item->statut,["EN_COURS_RAMASSAGE"])){
+        else if($request->statut == "RAMASSE"  &&  in_array($item->statut,["EN_COURS_RAMASSAGE","REPORTE"])){
             $item->statut = $request->statut;
             $item->nombre_colis_ramasseur = $request->nombre_colis_ramasseur;
             $item->save();
@@ -233,6 +234,27 @@ class RamassageController extends Controller
             $history = new History();
             $history->statut = $request->statut;
             $history->nombre_colis_ramasseur = $request->nombre_colis_ramasseur;
+            $item->histories()->save($history);
+        }
+        else if($request->statut == "REPORTE"  &&  in_array($item->statut,["EN_COURS_RAMASSAGE","REPORTE"])){
+            $item->statut = $request->statut;
+            $item->date_reporte = $request->date;
+            $item->save();
+            //add to history
+            $history = new History();
+            $history->statut = $request->statut;
+            $history->date = $request->date;
+            $item->histories()->save($history);
+        }
+        else if($request->statut == "ANNULE"  &&  in_array($item->statut,["EN_COURS_RAMASSAGE","REPORTE"])){
+            $item->statut = $request->statut;
+            $item->save();
+            //update statut colis
+            Colis::where('ramassage_id',$item->id)->update(['statut' => "EN_ATTENTE",'ramassage_id' => null]);
+            //add to history
+            $history = new History();
+            $history->statut = $request->statut;
+            $history->commentaire = $request->commentaire;
             $item->histories()->save($history);
         }
         else{

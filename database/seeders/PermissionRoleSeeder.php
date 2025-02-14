@@ -19,6 +19,9 @@ class PermissionRoleSeeder extends Seeder
        // $permissions = ['user'];
         $actions = ['list','create','update','show','delete'];
 
+
+        $otherPermissions = ['action.vendeur','action.livreur','action.gestionnaire'];
+
         //generate full permissions
         $fullPermissions = [];
         foreach ($actions as $action) {
@@ -26,7 +29,7 @@ class PermissionRoleSeeder extends Seeder
                 $fullPermissions[] = $permission.'.'.$action;
             }
         }
-
+        $fullPermissions = array_merge($fullPermissions,$otherPermissions);
         // Permission::create(['name' => 'role.create']);
         foreach ($fullPermissions as $mypermission) {
             Permission::create(['name' =>$mypermission]);
@@ -41,6 +44,8 @@ class PermissionRoleSeeder extends Seeder
 
         //generate gestionnaire permissions
         $GestionnairePermissions = [];
+        $GestionnairePermissions[] ='action.gestionnaire';
+        $GestionnairePermissions[] ='action.livreur';
         foreach ($actions as $action) {
             foreach ($permissions as $permission) {
                 if(in_array($permission,['role','permission','tarif']))
@@ -50,7 +55,9 @@ class PermissionRoleSeeder extends Seeder
         }
         //generate livreur permissions
         $livreurPermissions = [];
+        $livreurPermissions[] ='action.livreur';
         foreach ($actions as $action) {
+
             foreach ($permissions as $permission) {
                 if(in_array($permission,['role','permission','tarif','user']))
                     continue;
@@ -60,7 +67,9 @@ class PermissionRoleSeeder extends Seeder
 
         //generate vendeur permissions
         $vendeurPermissions = [];
+        $vendeurPermissions[] ='action.vendeur';
         foreach ($actions as $action) {
+
             foreach ($permissions as $permission) {
                 if(in_array($permission,['role','permission','tarif','user']))
                     continue;

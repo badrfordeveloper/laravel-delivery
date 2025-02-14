@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('commentaire')->nullable();
             $table->string('path')->nullable();
             $table->integer('nombre_colis_ramasseur')->nullable();
-            $table->string('date')->nullable();
+            $table->dateTime('date')->nullable();
             $table->integer('historiable_id');
             $table->string('historiable_type');
             $table->timestamps();
