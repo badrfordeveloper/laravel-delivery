@@ -20,7 +20,10 @@ class RamassageController extends Controller
     public function index(Request $request)
     {
         $textFilters = ['code','statut','nom_vendeur','tel_vendeur'];
-        $query = Ramassage::query()->with('histories');
+        $query = Ramassage::query()->select('ramassages.*','ramasseurs.lastName AS ramasseur' ,'vendeurs.lastName AS vendeur' )
+            ->with('histories')
+            ->leftJoin('users as ramasseurs', 'ramassages.ramasseur_id', '=', 'ramasseurs.id')
+            ->leftJoin('users as vendeurs', 'ramassages.vendeur_id', '=', 'vendeurs.id');
         foreach ($textFilters  as $filter) {
             if( $filter == 'tel_vendeur' && $request->has($filter) && !empty($request->{$filter})){
                 $query->where($filter,'like',"%".$request->{$filter}."%");
@@ -31,9 +34,11 @@ class RamassageController extends Controller
         $user = auth()->user();
         if($user->isVendeur()){
             $query->where('vendeur_id',$user->id);
+        }else if ($user->isLivreur()){
+            $query->where('ramasseur_id',$user->id);
         }
 
-        $query->orderBy('id','desc');
+        $query->orderBy('ramassages.id','desc');
         $result = $query->paginate($request->itemsPerPage);
         return response()->json([
             'items' => $result->items(),
@@ -208,13 +213,37 @@ class RamassageController extends Controller
         return  'Ramassage bien supprimée' ;
     }
 
+    public function updateRamasseur(Request $request)
+    {
+       Log::info('updateRamasseur  : '.json_encode($request->all()));
+
+        // Find the user by ID
+        $item = Ramassage::findOrFail($request->id);
+        if(in_array($item->statut,["EN_ATTENTE","EN_COURS_RAMASSAGE","REPORTE"])){
+            $item->ramasseur_id = $request->ramasseur_id;
+            $item->save();
+            return  'Ramasseur bien modifiée' ;
+        }
+        else{
+            return response()->json(['message' => 'Statut invalide'], 422);
+        }
+    }
+
     public function updateStatutRamassage(Request $request)
     {
         Log::info('updateStatutRamassage  : '.json_encode($request->all()));
 
         // Find the user by ID
         $item = Ramassage::findOrFail($request->id);
-        if($request->statut == "EN_COURS_RAMASSAGE"  &&  in_array($item->statut,["EN_ATTENTE"])){
+        if($request->statut == "COMMENTAIRE"){
+            $user = auth()->user();
+            //add to history
+            $history = new History();
+            $history->statut = $request->statut;
+            $history->commentaire = $user->firstName.' '. $user->lastName .' : '. $request->commentaire;
+            $item->histories()->save($history);
+        }
+        else if($request->statut == "EN_COURS_RAMASSAGE"  &&  in_array($item->statut,["EN_ATTENTE"])){
             $item->statut = $request->statut;
             $item->save();
             //update statut colis

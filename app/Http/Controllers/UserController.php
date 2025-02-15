@@ -6,6 +6,7 @@ use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller
@@ -136,5 +137,16 @@ class UserController extends Controller
         $user->tokens()->delete();
 
         return 'Utilisateur bien Modifié';
+    }
+
+    public function ramasseurs(Request $request)
+    {
+        return User::whereHas('roles', function($query) {
+            $query->where('name',"livreur");
+        })
+       /*  ->select('id as value' ,DB::raw('CONCAT(firstName, " ", lastName) AS title')) */
+        ->select('id as value' ,'lastName AS title')
+        ->get();
+
     }
 }
