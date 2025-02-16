@@ -17,6 +17,6 @@ class Colis extends Model
 
     public function histories()
     {
-        return $this->morphMany(History::class, 'historiable');
+        return $this->morphMany(History::class, 'historiable')->orderBy('id', 'desc');;
     }
 }

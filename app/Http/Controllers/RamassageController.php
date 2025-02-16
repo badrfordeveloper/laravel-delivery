@@ -20,7 +20,7 @@ class RamassageController extends Controller
     public function index(Request $request)
     {
         $textFilters = ['code','statut','nom_vendeur','tel_vendeur'];
-        $query = Ramassage::query()->select('ramassages.*','ramasseurs.lastName AS ramasseur' ,'vendeurs.lastName AS vendeur' )
+        $query = Ramassage::query()->select('ramassages.*','ramasseurs.lastName AS ramasseur','ramasseurs.phone AS tel_ramasseur' ,'vendeurs.lastName AS vendeur' )
             ->with('histories')
             ->leftJoin('users as ramasseurs', 'ramassages.ramasseur_id', '=', 'ramasseurs.id')
             ->leftJoin('users as vendeurs', 'ramassages.vendeur_id', '=', 'vendeurs.id');
@@ -163,7 +163,6 @@ class RamassageController extends Controller
         $item->makeHidden(['frais_ramasseur']);
         $filteredData = $item->toArray();
         $filteredData['colis'] = $item->colis->pluck('id')->toArray();
-        logger($filteredData);
         return $filteredData;
     }
 
@@ -240,7 +239,7 @@ class RamassageController extends Controller
             //add to history
             $history = new History();
             $history->statut = $request->statut;
-            $history->commentaire = $user->firstName.' '. $user->lastName .' : '. $request->commentaire;
+            $history->commentaire = $request->commentaire;
             $item->histories()->save($history);
         }
         else if($request->statut == "EN_COURS_RAMASSAGE"  &&  in_array($item->statut,["EN_ATTENTE"])){
@@ -251,6 +250,7 @@ class RamassageController extends Controller
             //add to history
             $history = new History();
             $history->statut = $request->statut;
+            $history->commentaire = $request->commentaire;
             $item->histories()->save($history);
         }
         else if($request->statut == "RAMASSE"  &&  in_array($item->statut,["EN_COURS_RAMASSAGE","REPORTE"])){
@@ -263,6 +263,7 @@ class RamassageController extends Controller
             $history = new History();
             $history->statut = $request->statut;
             $history->nombre_colis_ramasseur = $request->nombre_colis_ramasseur;
+            $history->commentaire = $request->commentaire;
             $item->histories()->save($history);
         }
         else if($request->statut == "REPORTE"  &&  in_array($item->statut,["EN_COURS_RAMASSAGE","REPORTE"])){
@@ -272,6 +273,7 @@ class RamassageController extends Controller
             //add to history
             $history = new History();
             $history->statut = $request->statut;
+            $history->commentaire = $request->commentaire;
             $history->date = $request->date;
             $item->histories()->save($history);
         }

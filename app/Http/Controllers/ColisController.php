@@ -17,7 +17,9 @@ class ColisController extends Controller
     public function index(Request $request)
     {
         $textFilters = ['code','statut','nom_client','tel_client'];
-        $query = Colis::query();
+        $query = Colis::query()->select('colis.*','livreurs.lastName AS ivreur' ,'vendeurs.lastName AS vendeur' )
+        ->leftJoin('users as livreurs', 'colis.livreur_id', '=', 'livreurs.id')
+            ->leftJoin('users as vendeurs', 'colis.vendeur_id', '=', 'vendeurs.id');
         foreach ($textFilters  as $filter) {
             if( $filter == 'tel_client' && $request->has($filter) && !empty($request->{$filter})){
                 $query->where($filter,'like',"%".$request->{$filter}."%");
@@ -125,7 +127,13 @@ class ColisController extends Controller
 
     public function show($id)
     {
-        $item = Colis::findOrFail($id);
+        $item = Colis::query()->select('colis.*','livreurs.lastName AS ivreur' ,'vendeurs.lastName AS vendeur','vendeurs.phone AS tel_vendeur' )
+            ->leftJoin('users as livreurs', 'colis.livreur_id', '=', 'livreurs.id')
+            ->leftJoin('users as vendeurs', 'colis.vendeur_id', '=', 'vendeurs.id')
+            ->first();
+            $historiesRamassage = $item->ramassage->histories->toArray();
+            $histories = $item->histories->toArray();
+            $item->colisHistories = array_merge($histories  , $historiesRamassage);
         return $item;
     }
 

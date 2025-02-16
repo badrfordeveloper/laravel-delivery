@@ -47,7 +47,5 @@ Route::middleware(['auth:sanctum',IsActive::class])->group(function () {
     Route::post('updateRamasseur', [RamassageController::class,'updateRamasseur']);
     Route::get('ramasseurs', [UserController::class,'ramasseurs']);
 
-
-
 });
 

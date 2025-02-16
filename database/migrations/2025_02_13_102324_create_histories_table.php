@@ -18,6 +18,8 @@ return new class extends Migration
             $table->string('path')->nullable();
             $table->integer('nombre_colis_ramasseur')->nullable();
             $table->dateTime('date')->nullable();
+            $table->string('creator_name')->nullable();
+            $table->foreignId('created_by')->constrained(  table: 'users', indexName: 'history_creator_id' );
             $table->integer('historiable_id');
             $table->string('historiable_type');
             $table->timestamps();
