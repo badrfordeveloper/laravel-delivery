@@ -127,12 +127,14 @@ class ColisController extends Controller
 
     public function show($id)
     {
-        $item = Colis::query()->select('colis.*','livreurs.lastName AS ivreur' ,'vendeurs.lastName AS vendeur','vendeurs.phone AS tel_vendeur' )
+
+        $item = Colis::query()->select('colis.*','livreurs.lastName AS livreur' ,'vendeurs.lastName AS vendeur','vendeurs.phone AS tel_vendeur' )
             ->leftJoin('users as livreurs', 'colis.livreur_id', '=', 'livreurs.id')
             ->leftJoin('users as vendeurs', 'colis.vendeur_id', '=', 'vendeurs.id')
+            ->where('colis.id', $id)
             ->first();
-            $historiesRamassage = $item->ramassage->histories->toArray();
-            $histories = $item->histories->toArray();
+            $historiesRamassage = $item->ramassage ? $item->ramassage->histories->toArray() : [];
+            $histories = $item->histories->toArray() ?? [];
             $item->colisHistories = array_merge($histories  , $historiesRamassage);
         return $item;
     }
