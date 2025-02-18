@@ -21,7 +21,7 @@ class RamassageController extends Controller
     {
         $textFilters = ['code','statut','nom_vendeur','tel_vendeur'];
         $query = Ramassage::query()->select('ramassages.*','ramasseurs.lastName AS ramasseur','ramasseurs.phone AS tel_ramasseur' ,'vendeurs.lastName AS vendeur' )
-            ->with('histories')
+
             ->leftJoin('users as ramasseurs', 'ramassages.ramasseur_id', '=', 'ramasseurs.id')
             ->leftJoin('users as vendeurs', 'ramassages.vendeur_id', '=', 'vendeurs.id');
         foreach ($textFilters  as $filter) {
@@ -159,11 +159,21 @@ class RamassageController extends Controller
 
     public function show($id)
     {
-        $item = Ramassage::with('colis')->findOrFail($id);
+       /*  $item = Ramassage::with('colis')->findOrFail($id);
         $item->makeHidden(['frais_ramasseur']);
         $filteredData = $item->toArray();
         $filteredData['colis'] = $item->colis->pluck('id')->toArray();
-        return $filteredData;
+        return $filteredData; */
+
+
+        $item = Ramassage::query()->select('ramassages.*','ramasseurs.lastName AS ramasseur','ramasseurs.phone AS tel_ramasseur' ,'vendeurs.lastName AS vendeur' )
+        ->leftJoin('users as ramasseurs', 'ramassages.ramasseur_id', '=', 'ramasseurs.id')
+        ->leftJoin('users as vendeurs', 'ramassages.vendeur_id', '=', 'vendeurs.id')
+            ->where('ramassages.id', $id)
+            ->with('histories')
+            ->first();
+
+        return $item;
     }
 
     public function update(Request $request, string $id)
@@ -212,7 +222,7 @@ class RamassageController extends Controller
         return  'Ramassage bien supprimée' ;
     }
 
-    public function updateRamasseur(Request $request)
+    public function parametrerRamassage(Request $request)
     {
        Log::info('updateRamasseur  : '.json_encode($request->all()));
 
@@ -220,6 +230,7 @@ class RamassageController extends Controller
         $item = Ramassage::findOrFail($request->id);
         if(in_array($item->statut,["EN_ATTENTE","EN_COURS_RAMASSAGE","REPORTE"])){
             $item->ramasseur_id = $request->ramasseur_id;
+            $item->frais_ramasseur = $request->frais_ramasseur;
             $item->save();
             return  'Ramasseur bien modifiée' ;
         }
