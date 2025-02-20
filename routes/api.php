@@ -39,13 +39,15 @@ Route::middleware(['auth:sanctum',IsActive::class])->group(function () {
     Route::get('permissions', [RoleController::class,'permissions']);
     Route::get('rolesList', [RoleController::class,'rolesList']);
     Route::apiResource('users', UserController::class);
+    Route::get('ramasseurs', [UserController::class,'ramasseurs']);
+
     Route::apiResource('tarifs', TarifController::class);
     Route::apiResource('colis', ColisController::class);
     Route::apiResource('ramassage', RamassageController::class);
     Route::get('colisForRamassage', [RamassageController::class,'colisForRamassage']);
     Route::post('updateStatutRamassage', [RamassageController::class,'updateStatutRamassage']);
     Route::post('parametrerRamassage', [RamassageController::class,'parametrerRamassage']);
-    Route::get('ramasseurs', [UserController::class,'ramasseurs']);
+    Route::post('scannerEntrepot', [RamassageController::class,'scannerEntrepot']);
 
 });
 

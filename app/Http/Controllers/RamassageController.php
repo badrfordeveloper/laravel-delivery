@@ -171,6 +171,7 @@ class RamassageController extends Controller
         ->leftJoin('users as vendeurs', 'ramassages.vendeur_id', '=', 'vendeurs.id')
             ->where('ramassages.id', $id)
             ->with('histories')
+            ->with('colis')
             ->first();
 
         return $item;
@@ -304,5 +305,80 @@ class RamassageController extends Controller
         }
 
         return  'Statut bien modifiée' ;
+    }
+
+    public function scannerEntrepot(Request $request)
+    {
+        Log::info('scannerEntrepot :  => '.json_encode($request->all()));
+
+        $result=["success"=>[],"errors"=>[]];
+        $ramassage = Ramassage::findOrFail($request->ramassage_id);
+        if(in_array($ramassage->statut,["RAMASSE"])){
+            //commonColis
+            $commonColis = $request->commonColis;
+            $ramssageColis = Colis::whereIn('code', $commonColis)
+                                    ->whereIn('statut', ['RAMASSE',"EN_COURS_RAMASSAGE","REPORTE","EN_ATTENTE"])
+                                    ->where([
+                                        ['ramassage_id', '=', $request->ramassage_id],
+                                        ['vendeur_id', $ramassage->vendeur_id]
+                                    ])->count();
+            if(count($commonColis) == $ramssageColis){
+                Colis::whereIn('code', $commonColis)->update(['statut' => "ENTREPOT"]);
+
+                $result['success'][]="les colis trouver de remassage est bien modifiée";
+                logger('success commonColis');
+                //
+            }else{
+                logger('error commonColis');
+                $result['errors'][]="les codes des colis erroné";
+            }
+
+            //externeColis
+            $externeColis = $request->externeColis;
+            $ramssageColis = Colis::whereIn('code', $externeColis)
+                                    ->whereIn('statut', ['RAMASSE',"EN_COURS_RAMASSAGE","REPORTE","EN_ATTENTE"])
+                                    ->where([
+                                        ['vendeur_id', $ramassage->vendeur_id]
+                                    ])->count();
+            if(count($externeColis) == $ramssageColis){
+               Colis::whereIn('code', $externeColis)->update(['statut' => "ENTREPOT",'ramassage_id' => $ramassage->id]);
+
+                $result['success'][]="les colis externe est bien modifiée";
+                logger('success externeColis');
+                //
+            }else{
+                logger('error externeColis');
+                $result['errors'][]="les codes externe erroné";
+            }
+
+            //missingColis
+            $missingColis = $request->missingColis;
+            $ramssageColis = Colis::whereIn('code', $missingColis)
+                                    ->whereIn('statut', ['RAMASSE',"EN_COURS_RAMASSAGE","REPORTE","EN_ATTENTE"])
+                                    ->where([
+                                        ['vendeur_id', $ramassage->vendeur_id]
+                                    ])->count();
+
+            if(count($missingColis) == $ramssageColis){
+               Colis::whereIn('code', $missingColis)->update(['statut' => "EN_ATTENTE",'ramassage_id' => null]);
+
+                $result['success'][]="les colis manquant est bien modifiée";
+                logger('success missingColis');
+                //
+            }else{
+                logger('error missingColis');
+                $result['errors'][]="les codes manquant erroné";
+            }
+
+
+
+            $ramassage->statut ="ENTREPOT";
+            $ramassage->save();
+
+        }else{
+            $result['errors'][]="Statut de ramassage invalide";
+        }
+
+        return  $result ;
     }
 }
