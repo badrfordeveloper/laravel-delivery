@@ -159,16 +159,18 @@ class RamassageController extends Controller
 
     public function show($id)
     {
-       /*  $item = Ramassage::with('colis')->findOrFail($id);
+       /*
+        $item = Ramassage::with('colis')->findOrFail($id);
         $item->makeHidden(['frais_ramasseur']);
         $filteredData = $item->toArray();
         $filteredData['colis'] = $item->colis->pluck('id')->toArray();
-        return $filteredData; */
+        return $filteredData;
+        */
 
 
         $item = Ramassage::query()->select('ramassages.*','ramasseurs.lastName AS ramasseur','ramasseurs.phone AS tel_ramasseur' ,'vendeurs.lastName AS vendeur' )
-        ->leftJoin('users as ramasseurs', 'ramassages.ramasseur_id', '=', 'ramasseurs.id')
-        ->leftJoin('users as vendeurs', 'ramassages.vendeur_id', '=', 'vendeurs.id')
+            ->leftJoin('users as ramasseurs', 'ramassages.ramasseur_id', '=', 'ramasseurs.id')
+            ->leftJoin('users as vendeurs', 'ramassages.vendeur_id', '=', 'vendeurs.id')
             ->where('ramassages.id', $id)
             ->with('histories')
             ->with('colis')
@@ -311,70 +313,87 @@ class RamassageController extends Controller
     {
         Log::info('scannerEntrepot :  => '.json_encode($request->all()));
 
-        $result=["success"=>[],"errors"=>[]];
+        $result=["success"=>[],"errors"=>[],"colisError"=>[]];
         $ramassage = Ramassage::findOrFail($request->ramassage_id);
-        if(in_array($ramassage->statut,["RAMASSE"])){
+
+
+        if(in_array($ramassage->statut,["RAMASSE","ENTREPOT"])){
             //commonColis
-            $commonColis = $request->commonColis;
-            $ramssageColis = Colis::whereIn('code', $commonColis)
-                                    ->whereIn('statut', ['RAMASSE',"EN_COURS_RAMASSAGE","REPORTE","EN_ATTENTE"])
-                                    ->where([
-                                        ['ramassage_id', '=', $request->ramassage_id],
-                                        ['vendeur_id', $ramassage->vendeur_id]
-                                    ])->count();
-            if(count($commonColis) == $ramssageColis){
-                Colis::whereIn('code', $commonColis)->update(['statut' => "ENTREPOT"]);
-
-                $result['success'][]="les colis trouver de remassage est bien modifiée";
-                logger('success commonColis');
-                //
-            }else{
-                logger('error commonColis');
-                $result['errors'][]="les codes des colis erroné";
+            if(count($request->commonColis) > 0){
+                $commonColis = $request->commonColis;
+                $queryCommonColis = Colis::whereIn('code', $commonColis)
+                                        ->whereIn('statut', ['RAMASSE',"EN_COURS_RAMASSAGE","EN_ATTENTE"])
+                                        ->where([
+                                            ['ramassage_id', '=', $request->ramassage_id],
+                                            ['vendeur_id', $ramassage->vendeur_id]
+                                        ]);
+                $countCommon = $queryCommonColis->count();
+                if(count($commonColis) == $countCommon){
+                    $result['success'][]="les colis trouver de remassage est bien modifiée";
+                    logger('success commonColis');
+                    //
+                }else{
+                    logger('error commonColis');
+                    $resutlCommon = $queryCommonColis->get('code')->pluck('code')->toArray();
+                    $result['colisError'] = array_merge($result['colisError'], array_diff($commonColis, $resutlCommon));
+                    $result['errors'][]="les codes des colis erroné";
+                }
             }
-
             //externeColis
-            $externeColis = $request->externeColis;
-            $ramssageColis = Colis::whereIn('code', $externeColis)
-                                    ->whereIn('statut', ['RAMASSE',"EN_COURS_RAMASSAGE","REPORTE","EN_ATTENTE"])
-                                    ->where([
-                                        ['vendeur_id', $ramassage->vendeur_id]
-                                    ])->count();
-            if(count($externeColis) == $ramssageColis){
-               Colis::whereIn('code', $externeColis)->update(['statut' => "ENTREPOT",'ramassage_id' => $ramassage->id]);
+            if(count($request->externeColis) > 0){
 
-                $result['success'][]="les colis externe est bien modifiée";
-                logger('success externeColis');
-                //
-            }else{
-                logger('error externeColis');
-                $result['errors'][]="les codes externe erroné";
+                $externeColis = $request->externeColis;
+                $queryExterneColis = Colis::whereIn('code', $externeColis)
+                                        ->whereIn('statut', ['RAMASSE',"EN_COURS_RAMASSAGE","EN_ATTENTE"])
+                                        ->where([
+                                            ['vendeur_id', $ramassage->vendeur_id]
+                                        ]);
+                $countExterne = $queryExterneColis->count();
+                if(count($externeColis) == $countExterne){
+                    $result['success'][]="les colis externe est bien modifiée";
+                    logger('success externeColis');
+                }else{
+                    logger('error externeColis');
+                    $resutlExterne = $queryExterneColis->get('code')->pluck('code')->toArray();
+                    $result['colisError'] = array_merge($result['colisError'], array_diff($externeColis, $resutlExterne));
+                    $result['errors'][]="les codes externe erroné";
+                }
             }
-
             //missingColis
-            $missingColis = $request->missingColis;
-            $ramssageColis = Colis::whereIn('code', $missingColis)
-                                    ->whereIn('statut', ['RAMASSE',"EN_COURS_RAMASSAGE","REPORTE","EN_ATTENTE"])
-                                    ->where([
-                                        ['vendeur_id', $ramassage->vendeur_id]
-                                    ])->count();
-
-            if(count($missingColis) == $ramssageColis){
-               Colis::whereIn('code', $missingColis)->update(['statut' => "EN_ATTENTE",'ramassage_id' => null]);
-
-                $result['success'][]="les colis manquant est bien modifiée";
-                logger('success missingColis');
-                //
-            }else{
-                logger('error missingColis');
-                $result['errors'][]="les codes manquant erroné";
+            if(count($request->missingColis) > 0){
+                $missingColis = $request->missingColis;
+                $queryMissingColis = Colis::whereIn('code', $missingColis)
+                                        ->whereIn('statut', ['RAMASSE',"EN_COURS_RAMASSAGE","EN_ATTENTE"])
+                                        ->where([
+                                            ['vendeur_id', $ramassage->vendeur_id]
+                                        ]);
+                $countMissing = $queryMissingColis->count();
+                if(count($missingColis) == $countMissing){
+                    $result['success'][]="les colis manquant est bien modifiée";
+                    logger('success missingColis');
+                }else{
+                    logger('error missingColis');
+                    $resutlMissing = $queryMissingColis->get('code')->pluck('code')->toArray();
+                    $result['colisError'] = array_merge($result['colisError'], array_diff($missingColis, $resutlMissing));
+                    $result['errors'][]="les codes manquant erroné";
+                }
             }
-
-
-
-            $ramassage->statut ="ENTREPOT";
-            $ramassage->save();
-
+            // all is valid with no errors start the update
+            if(empty($result['errors'])){
+                if(count($request->commonColis) > 0)
+                    Colis::whereIn('code', $commonColis)->update(['statut' => "ENTREPOT"]);
+                if(count($request->externeColis) > 0)
+                    Colis::whereIn('code', $externeColis)->update(['statut' => "ENTREPOT",'ramassage_id' => $ramassage->id]);
+                if(count($request->missingColis) > 0)
+                    Colis::whereIn('code', $missingColis)->update(['statut' => "EN_ATTENTE",'ramassage_id' => null]);
+                //start the update
+                $ramassage->statut ="ENTREPOT";
+                $ramassage->save();
+                //add history
+                $history = new History();
+                $history->statut = "ENTREPOT";
+                $ramassage->histories()->save($history);
+            }
         }else{
             $result['errors'][]="Statut de ramassage invalide";
         }
