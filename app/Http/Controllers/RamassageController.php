@@ -317,7 +317,7 @@ class RamassageController extends Controller
         $ramassage = Ramassage::findOrFail($request->ramassage_id);
 
 
-        if(in_array($ramassage->statut,["RAMASSE","ENTREPOT"])){
+        if(in_array($ramassage->statut,["RAMASSE"])){
             //commonColis
             if(count($request->commonColis) > 0){
                 $commonColis = $request->commonColis;
