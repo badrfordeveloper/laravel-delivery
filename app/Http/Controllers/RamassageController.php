@@ -393,6 +393,8 @@ class RamassageController extends Controller
                 $history = new History();
                 $history->statut = "ENTREPOT";
                 $ramassage->histories()->save($history);
+            } else {
+                $result['success'] = [];
             }
         }else{
             $result['errors'][]="Statut de ramassage invalide";
