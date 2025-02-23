@@ -249,14 +249,13 @@ class RamassageController extends Controller
         // Find the user by ID
         $item = Ramassage::findOrFail($request->id);
         if($request->statut == "COMMENTAIRE"){
-            $user = auth()->user();
             //add to history
             $history = new History();
             $history->statut = $request->statut;
             $history->commentaire = $request->commentaire;
             $item->histories()->save($history);
         }
-        else if($request->statut == "EN_COURS_RAMASSAGE"  &&  in_array($item->statut,["EN_ATTENTE"])){
+        else if($request->statut == "EN_COURS_RAMASSAGE"  &&  in_array($item->statut,["EN_ATTENTE","REPORTE"])){
             $item->statut = $request->statut;
             $item->save();
             //update statut colis
@@ -291,7 +290,7 @@ class RamassageController extends Controller
             $history->date = $request->date;
             $item->histories()->save($history);
         }
-        else if($request->statut == "ANNULE"  &&  in_array($item->statut,["EN_COURS_RAMASSAGE","REPORTE"])){
+        else if($request->statut == "ANNULE"  &&  in_array($item->statut,["EN_COURS_RAMASSAGE","REPORTE","RAMASSE"])){
             $item->statut = $request->statut;
             $item->save();
             //update statut colis

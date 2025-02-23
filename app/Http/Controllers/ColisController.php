@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Colis;
 use App\Models\Tarif;
+use App\Models\History;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -17,7 +18,7 @@ class ColisController extends Controller
     public function index(Request $request)
     {
         $textFilters = ['code','statut','nom_client','tel_client'];
-        $query = Colis::query()->select('colis.*','livreurs.lastName AS ivreur' ,'vendeurs.lastName AS vendeur' )
+        $query = Colis::query()->select('colis.*','livreurs.lastName AS livreur' ,'vendeurs.lastName AS vendeur')
         ->leftJoin('users as livreurs', 'colis.livreur_id', '=', 'livreurs.id')
             ->leftJoin('users as vendeurs', 'colis.vendeur_id', '=', 'vendeurs.id');
         foreach ($textFilters  as $filter) {
@@ -30,7 +31,10 @@ class ColisController extends Controller
         $user = auth()->user();
         if($user->isVendeur()){
             $query->where('vendeur_id',$user->id);
+        }else if ($user->isLivreur()){
+            $query->where('livreur_id',$user->id);
         }
+
 
         $query->orderBy('id','desc');
         $result = $query->paginate($request->itemsPerPage);
@@ -128,9 +132,10 @@ class ColisController extends Controller
     public function show($id)
     {
 
-        $item = Colis::query()->select('colis.*','livreurs.lastName AS livreur' ,'vendeurs.lastName AS vendeur','vendeurs.phone AS tel_vendeur' )
+        $item = Colis::query()->select('colis.*','livreurs.lastName AS livreur','livreurs.phone AS tel_livreur' ,'vendeurs.lastName AS vendeur','vendeurs.phone AS tel_vendeur','ramassages.code AS code_ramassage'   )
             ->leftJoin('users as livreurs', 'colis.livreur_id', '=', 'livreurs.id')
             ->leftJoin('users as vendeurs', 'colis.vendeur_id', '=', 'vendeurs.id')
+            ->leftJoin('ramassages', 'colis.ramassage_id', '=', 'ramassages.id')
             ->where('colis.id', $id)
             ->first();
             $historiesRamassage = $item->ramassage ? $item->ramassage->histories->toArray() : [];
@@ -213,4 +218,77 @@ class ColisController extends Controller
         $item->delete();
         return  'Colis bien supprimée' ;
     }
+
+
+    public function parametrerColis(Request $request)
+    {
+       Log::info('parametrerColis  : '.json_encode($request->all()));
+
+        // Find the user by ID
+        $item = Colis::findOrFail($request->id);
+        if(in_array($item->statut,["ENTREPOT"])){
+            $item->livreur_id = $request->livreur_id;
+            $item->frais_livreur = $request->frais_livreur;
+            $item->save();
+            return  'Colis bien modifiée' ;
+        }
+        else{
+            return response()->json(['message' => 'Statut invalide'], 422);
+        }
+    }
+
+    public function updateStatutColis(Request $request)
+    {
+        Log::info('updateStatutColis  : '.json_encode($request->all()));
+
+        // Find the user by ID
+        $item = Colis::findOrFail($request->id);
+        $oldStatut = $item->statut;
+        if($request->statut == "COMMENTAIRE"){
+            //add to history
+            $history = new History();
+            $history->statut = $request->statut;
+            $history->commentaire = $request->commentaire;
+            $item->histories()->save($history);
+        }
+        else if($request->statut == "EN_COURS_LIVRAISON"  &&  in_array($oldStatut,["ENTREPOT","REPORTE"])){
+            $item->statut = $request->statut;
+            $item->save();
+            //add to history
+            $history = new History();
+            $history->statut = $request->statut;
+            $history->commentaire = $request->commentaire;
+            $item->histories()->save($history);
+        }
+        else if($request->statut == "LIVRE"  &&  in_array($oldStatut,["EN_COURS_LIVRAISON"])){
+            $item->statut = $request->statut;
+            $item->save();
+            //add to history
+            $history = new History();
+            $history->statut = $request->statut;
+            $history->commentaire = $request->commentaire;
+            $item->histories()->save($history);
+        }
+        else if(in_array($request->statut,["LIVRE_PARTIELLEMENT","ANNULE","PAS_REPONSE","REPORTE","REFUSE"])  &&  in_array($oldStatut,["EN_COURS_LIVRAISON"])){
+            $request->validate([
+                'file' => 'required|file|image|max:2048',
+            ]);
+            $filePath = $request->file('file')->store('histories/colis/'.$item->code, 'public');
+
+            $item->statut = $request->statut;
+            $item->save();
+            //add to history
+            $history = new History();
+            $history->statut = $request->statut;
+            $history->commentaire = $request->commentaire;
+            $history->file_path = $filePath ;
+            $item->histories()->save($history);
+        }
+        else{
+            return response()->json(['message' => 'Statut invalide'], 422);
+        }
+
+        return  'Statut bien modifiée' ;
+    }
+
 }

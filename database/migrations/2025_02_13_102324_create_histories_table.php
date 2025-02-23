@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('statut');
             $table->string('commentaire')->nullable();
-            $table->string('path')->nullable();
+            $table->string('file_path')->nullable();
             $table->integer('nombre_colis_ramasseur')->nullable();
             $table->dateTime('date')->nullable();
             $table->string('creator_name')->nullable();
