@@ -251,7 +251,7 @@ class ColisController extends Controller
             $history->commentaire = $request->commentaire;
             $item->histories()->save($history);
         }
-        else if($request->statut == "EN_COURS_LIVRAISON"  &&  in_array($oldStatut,["ENTREPOT","REPORTE"])){
+        else if($request->statut == "EN_COURS_LIVRAISON"  &&  in_array($oldStatut,["ENTREPOT","REPORTE","PAS_REPONSE"])){
             $item->statut = $request->statut;
             $item->save();
             //add to history
@@ -276,6 +276,10 @@ class ColisController extends Controller
             $filePath = $request->file('file')->store('histories/colis/'.$item->code, 'public');
 
             $item->statut = $request->statut;
+            if(in_array($request->statut,["LIVRE_PARTIELLEMENT","ANNULE","REFUSE"])){
+                $item->statut_retour = "EN_ATTENTE_RETOUR";
+            }
+
             $item->save();
             //add to history
             $history = new History();
@@ -289,6 +293,54 @@ class ColisController extends Controller
         }
 
         return  'Statut bien modifiée' ;
+    }
+
+    public function scannerRetourEntrepot(Request $request)
+    {
+        Log::info('scannerRetourEntrepot :  => '.json_encode($request->all()));
+
+        $result=["success"=>[],"errors"=>[],"colisError"=>[]];
+
+            //scannedColis
+            if(count($request->scannedColis) > 0){
+                $scannedColis = $request->scannedColis;
+                $queryScannedColis = Colis::whereIn('code', $scannedColis)
+                                        ->where('statut_retour', "EN_ATTENTE_RETOUR");
+                $countScanned = $queryScannedColis->count();
+                if(count($scannedColis) == $countScanned){
+                    $result['success'][]="les colis est bien modifiée";
+                    logger('success scannedColis');
+                    //
+                }else{
+                    logger('error scannedColis');
+                    $resutlScanned = $queryScannedColis->get('code')->pluck('code')->toArray();
+                    $result['colisError'] = array_diff($scannedColis, $resutlScanned);
+                    $result['errors'][]="les codes des colis erroné";
+                }
+            }
+
+            // all is valid with no errors start the update
+            if(empty($result['errors'])){
+                if(count($request->scannedColis) > 0)
+                    Colis::whereIn('code', $scannedColis)->update(['statut_retour' => "RETOURNE_ENTREPOT"]);
+
+
+
+                // Retrieve all colis items that match the query
+                $colisItems = Colis::whereIn('code', $scannedColis)->get();
+
+                // Loop through each colis and save the history
+                foreach ($colisItems as $colis) {
+                    $history = new History();
+                    $history->statut = "RETOURNE_ENTREPOT";
+                    $colis->histories()->save($history);
+                }
+
+            } else {
+                $result['success'] = [];
+            }
+
+        return  $result ;
     }
 
 }

@@ -27,7 +27,9 @@ return new class extends Migration
             $table->boolean('ouvrir');
             $table->boolean('echange');
             $table->string('statut');
+            $table->string('statut_retour')->nullable();
             $table->foreignId('ramassage_id')->nullable()->constrained();
+            $table->foreignId('retour_id')->nullable()->constrained();
             $table->foreignId('tarif_id')->constrained();
             $table->foreignId('vendeur_id')->constrained(  table: 'users', indexName: 'colis_vendeur_id' );
             $table->foreignId('livreur_id')->nullable()->constrained(  table: 'users', indexName: 'colis_livreur_id' );

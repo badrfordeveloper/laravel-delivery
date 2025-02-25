@@ -9,6 +9,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ColisController;
 use App\Http\Controllers\TarifController;
+use App\Http\Controllers\RetourController;
 use App\Http\Controllers\RamassageController;
 
 /*
@@ -52,6 +53,16 @@ Route::middleware(['auth:sanctum',IsActive::class])->group(function () {
     Route::post('parametrerRamassage', [RamassageController::class,'parametrerRamassage']);
 
     Route::post('scannerEntrepot', [RamassageController::class,'scannerEntrepot']);
+
+    Route::post('scannerRetourEntrepot', [ColisController::class,'scannerRetourEntrepot']);
+
+    Route::post('scannerPreparer', [RetourController::class,'scannerPreparer']);
+
+    Route::apiResource('retour', RetourController::class);
+    Route::get('colisCanRetour', [RetourController::class,'colisCanRetour']);
+    Route::post('parametrerRetour', [RetourController::class,'parametrerRetour']);
+
+
 
 });
 

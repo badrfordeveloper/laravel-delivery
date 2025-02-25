@@ -15,12 +15,12 @@ class PermissionRoleSeeder extends Seeder
      */
     public function run(): void
     {
-        $permissions = ['role','permission','tarif','user','colis','ramassage'];
+        $permissions = ['role','permission','tarif','user','colis','ramassage','retour'];
        // $permissions = ['user'];
         $actions = ['list','create','update','show','delete'];
 
 
-        $otherPermissions = ['action.vendeur','action.livreur','action.gestionnaire'];
+        $otherPermissions = ['action.vendeur','action.livreur','action.gestionnaire','retour.scan'];
 
         //generate full permissions
         $fullPermissions = [];
@@ -46,6 +46,7 @@ class PermissionRoleSeeder extends Seeder
         $GestionnairePermissions = [];
         $GestionnairePermissions[] ='action.gestionnaire';
         $GestionnairePermissions[] ='action.livreur';
+        $GestionnairePermissions[] ='retour.scan';
         foreach ($actions as $action) {
             foreach ($permissions as $permission) {
                 if(in_array($permission,['role','permission','tarif']))
