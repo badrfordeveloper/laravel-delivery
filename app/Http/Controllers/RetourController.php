@@ -84,7 +84,7 @@ class RetourController extends Controller
             'tel_vendeur' => 'required',
             'tarif_id' => 'required',
             'adresse' => 'required',
-            'colis' => 'required|array|min:1'
+            'colis_ids' => 'required|array|min:1'
         ]);
 
         $item = new Retour();
@@ -94,7 +94,7 @@ class RetourController extends Controller
         $item->tarif_id = $tarif->id;
         $item->destination = $tarif->destination;
         $item->adresse = $request->adresse;
-        $item->nombre_colis = count($request->colis);
+        $item->nombre_colis = count($request->colis_ids);
 
         $item->statut = 'EN_ATTENTE';
         $item->vendeur_id = $request->user()->id;
@@ -128,7 +128,7 @@ class RetourController extends Controller
             }
         }
         // updates retour of colis
-        Colis::whereIn('id', $request->colis)->update(['retour_id' => $item->id]);
+        Colis::whereIn('id', $request->colis_ids)->update(['retour_id' => $item->id]);
 
         return 'Retour bien ajoutée';
     }
@@ -246,23 +246,21 @@ class RetourController extends Controller
             $history->commentaire = $request->commentaire;
             $item->histories()->save($history);
         }
-        else if($request->statut == "EN_COURS_RAMASSAGE"  &&  in_array($item->statut,["EN_ATTENTE","REPORTE"])){
+        else if($request->statut == "EN_COURS_RETOUR"  &&  in_array($item->statut,["PREPARER","REPORTE"])){
             $item->statut = $request->statut;
             $item->save();
-            //update statut colis
-            Colis::where('retour_id',$item->id)->update(['statut' => $request->statut]);
             //add to history
             $history = new History();
             $history->statut = $request->statut;
             $history->commentaire = $request->commentaire;
             $item->histories()->save($history);
         }
-        else if($request->statut == "RAMASSE"  &&  in_array($item->statut,["EN_COURS_RAMASSAGE","REPORTE"])){
+        else if($request->statut == "RETOURNER"  &&  in_array($item->statut,["EN_COURS_RETOUR"])){
             $item->statut = $request->statut;
             $item->nombre_colis_ramasseur = $request->nombre_colis_ramasseur;
             $item->save();
             //update statut colis
-            Colis::where('retour_id',$item->id)->update(['statut' => $request->statut]);
+            Colis::where('retour_id',$item->id)->update(['statut_retour' => "RETOURNE_AU_VENDEUR"]);
             //add to history
             $history = new History();
             $history->statut = $request->statut;
@@ -270,7 +268,7 @@ class RetourController extends Controller
             $history->commentaire = $request->commentaire;
             $item->histories()->save($history);
         }
-        else if($request->statut == "REPORTE"  &&  in_array($item->statut,["EN_COURS_RAMASSAGE","REPORTE"])){
+        else if($request->statut == "REPORTE"  &&  in_array($item->statut,["EN_COURS_RETOUR"])){
             $item->statut = $request->statut;
             $item->date_reporte = $request->date;
             $item->save();
@@ -279,17 +277,6 @@ class RetourController extends Controller
             $history->statut = $request->statut;
             $history->commentaire = $request->commentaire;
             $history->date = $request->date;
-            $item->histories()->save($history);
-        }
-        else if($request->statut == "ANNULE"  &&  in_array($item->statut,["EN_COURS_RAMASSAGE","REPORTE","RAMASSE"])){
-            $item->statut = $request->statut;
-            $item->save();
-            //update statut colis
-            Colis::where('retour_id',$item->id)->update(['statut' => "EN_ATTENTE",'retour_id' => null]);
-            //add to history
-            $history = new History();
-            $history->statut = $request->statut;
-            $history->commentaire = $request->commentaire;
             $item->histories()->save($history);
         }
         else{

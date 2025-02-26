@@ -85,7 +85,7 @@ class RamassageController extends Controller
             'tel_vendeur' => 'required',
             'tarif_id' => 'required',
             'adresse' => 'required',
-            'colis' => 'required|array|min:1'
+            'colis_ids' => 'required|array|min:1'
         ]);
 
         $item = new Ramassage();
@@ -95,7 +95,7 @@ class RamassageController extends Controller
         $item->tarif_id = $tarif->id;
         $item->destination = $tarif->destination;
         $item->adresse = $request->adresse;
-        $item->nombre_colis = count($request->colis);
+        $item->nombre_colis = count($request->colis_ids);
 
         $item->statut = 'EN_ATTENTE';
         $item->vendeur_id = $request->user()->id;
@@ -129,7 +129,7 @@ class RamassageController extends Controller
             }
         }
         // updates ramassage of colis
-        Colis::whereIn('id', $request->colis)->update(['ramassage_id' => $item->id]);
+        Colis::whereIn('id', $request->colis_ids)->update(['ramassage_id' => $item->id]);
 
         return 'Ramassage bien ajoutée';
     }

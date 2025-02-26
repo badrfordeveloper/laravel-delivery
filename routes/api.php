@@ -61,6 +61,8 @@ Route::middleware(['auth:sanctum',IsActive::class])->group(function () {
     Route::apiResource('retour', RetourController::class);
     Route::get('colisCanRetour', [RetourController::class,'colisCanRetour']);
     Route::post('parametrerRetour', [RetourController::class,'parametrerRetour']);
+    Route::post('updateStatutRetour', [RetourController::class,'updateStatutRetour']);
+
 
 
 
