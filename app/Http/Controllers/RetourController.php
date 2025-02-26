@@ -288,7 +288,7 @@ class RetourController extends Controller
 
     public function scannerPreparer(Request $request)
     {
-        Log::info('scannerEntrepot :  => '.json_encode($request->all()));
+        Log::info('scannerPreparer :  => '.json_encode($request->all()));
 
         $result=["success"=>[],"errors"=>[],"colisError"=>[]];
 
