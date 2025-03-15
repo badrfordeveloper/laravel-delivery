@@ -249,6 +249,12 @@ class RamassageController extends Controller
 
         // Find the user by ID
         $item = Ramassage::findOrFail($request->id);
+
+
+        if( $request->statut != "COMMENTAIRE" && is_null($item->ramasseur_id) ){
+            return response()->json(['message' => 'Merci d\'assigner ramasseur'], 422);
+        }
+
         if($request->statut == "COMMENTAIRE"){
             //add to history
             $history = new History();

@@ -14,18 +14,19 @@ return new class extends Migration
         Schema::create('ramassages', function (Blueprint $table) {
             $table->id();
             $table->string('code')->unique();
+            $table->string('statut');
+            $table->foreignId('vendeur_id')->constrained(  table: 'users', indexName: 'ramassage_vendeur_id' );
+            $table->foreignId('ramasseur_id')->nullable()->constrained(  table: 'users', indexName: 'ramassage_ramasseur_id' );
+            $table->foreignId('facture_id')->nullable()->constrained();
+            $table->decimal('frais_ramasseur')->nullable();
             $table->string('nom_vendeur');
             $table->string('tel_vendeur');
             $table->string('adresse');
             $table->integer('nombre_colis');
             $table->integer('nombre_colis_ramasseur')->nullable();
             $table->dateTime('date_reporte')->nullable();
-            $table->decimal('frais_ramasseur')->nullable();
-            $table->string('statut');
             $table->foreignId('tarif_id')->constrained();
             $table->string('destination');
-            $table->foreignId('vendeur_id')->constrained(  table: 'users', indexName: 'ramassage_vendeur_id' );
-            $table->foreignId('ramasseur_id')->nullable()->constrained(  table: 'users', indexName: 'ramassage_ramasseur_id' );
             $table->foreignId('created_by')->constrained(  table: 'users', indexName: 'ramassage_creator_id' );
             $table->timestamps();
             $table->softDeletes();

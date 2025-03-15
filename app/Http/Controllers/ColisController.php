@@ -244,6 +244,11 @@ class ColisController extends Controller
         // Find the user by ID
         $item = Colis::findOrFail($request->id);
         $oldStatut = $item->statut;
+
+        if( $request->statut != "COMMENTAIRE" && is_null($item->livreur_id) ){
+            return response()->json(['message' => 'Merci d\'assigner livreur'], 422);
+        }
+
         if($request->statut == "COMMENTAIRE"){
             //add to history
             $history = new History();

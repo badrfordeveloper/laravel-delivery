@@ -222,7 +222,7 @@ class RetourController extends Controller
 
         // Find the user by ID
         $item = Retour::findOrFail($request->id);
-        if(in_array($item->statut,["EN_ATTENTE"])){
+        if(in_array($item->statut,["EN_ATTENTE","PREPARER"])){
             $item->ramasseur_id = $request->ramasseur_id;
             $item->frais_ramasseur = $request->frais_ramasseur;
             $item->save();
@@ -239,6 +239,11 @@ class RetourController extends Controller
 
         // Find the user by ID
         $item = Retour::findOrFail($request->id);
+
+        if( $request->statut != "COMMENTAIRE" && is_null($item->ramasseur_id) ){
+            return response()->json(['message' => 'Merci d\'assigner ramasseur'], 422);
+        }
+
         if($request->statut == "COMMENTAIRE"){
             //add to history
             $history = new History();

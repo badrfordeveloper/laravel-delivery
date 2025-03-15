@@ -11,6 +11,7 @@ use App\Http\Controllers\ColisController;
 use App\Http\Controllers\TarifController;
 use App\Http\Controllers\RetourController;
 use App\Http\Controllers\RamassageController;
+use App\Http\Controllers\LivreurFactureController;
 
 /*
 |--------------------------------------------------------------------------
@@ -62,6 +63,11 @@ Route::middleware(['auth:sanctum',IsActive::class])->group(function () {
     Route::get('colisCanRetour', [RetourController::class,'colisCanRetour']);
     Route::post('parametrerRetour', [RetourController::class,'parametrerRetour']);
     Route::post('updateStatutRetour', [RetourController::class,'updateStatutRetour']);
+
+
+    Route::post('generateLivreurFactures', [LivreurFactureController::class,'generateLivreurFactures']);
+    Route::apiResource('factureLivreur', LivreurFactureController::class);
+    Route::post('updateStatutFactureLivreur', [LivreurFactureController::class,'updateStatutFactureLivreur']);
 
 
 

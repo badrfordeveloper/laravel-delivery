@@ -60,9 +60,23 @@ class User extends Authenticatable
     {
         return $this->hasRole('vendeur');
     }
+
     public function isLivreur(): bool
     {
         return $this->hasRole('livreur');
     }
 
+    public function colis()
+    {
+        return $this->hasMany(Colis::class, 'livreur_id');
+    }
+
+    public function retours()
+    {
+        return $this->hasMany(Retour::class, 'ramasseur_id');
+    }
+    public function ramassages()
+    {
+        return $this->hasMany(Ramassage::class, 'ramasseur_id');
+    }
 }
