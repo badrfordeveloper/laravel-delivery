@@ -66,17 +66,35 @@ class User extends Authenticatable
         return $this->hasRole('livreur');
     }
 
-    public function colis()
+    public function colisLivreur()
     {
         return $this->hasMany(Colis::class, 'livreur_id');
     }
+
 
     public function retours()
     {
         return $this->hasMany(Retour::class, 'ramasseur_id');
     }
+
     public function ramassages()
     {
         return $this->hasMany(Ramassage::class, 'ramasseur_id');
+    }
+
+    public function colisVendeur()
+    {
+        return $this->hasMany(Colis::class, 'vendeur_id');
+    }
+
+
+    public function retoursVendeur()
+    {
+        return $this->hasMany(Retour::class, 'vendeur_id');
+    }
+
+    public function ramassagesVendeur()
+    {
+        return $this->hasMany(Ramassage::class, 'vendeur_id');
     }
 }

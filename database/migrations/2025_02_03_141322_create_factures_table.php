@@ -31,6 +31,7 @@ return new class extends Migration
             $table->decimal('montant_gestionnaire')->nullable();
             $table->string('recu_path')->nullable();
             $table->foreignId('livreur_id')->nullable()->constrained(  table: 'users', indexName: 'facture_livreur_id' );
+            $table->foreignId('vendeur_id')->nullable()->constrained(  table: 'users', indexName: 'facture_vendeur_id' );
             $table->timestamps();
             $table->softDeletes();
         });
@@ -41,6 +42,11 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::table('factures', function(Blueprint $table)
+		{
+            $table->dropForeign(['livreur_id']);
+            $table->dropForeign(['vendeur_id']);
+		});
         Schema::dropIfExists('factures');
     }
 };

@@ -11,7 +11,8 @@ use App\Http\Controllers\ColisController;
 use App\Http\Controllers\TarifController;
 use App\Http\Controllers\RetourController;
 use App\Http\Controllers\RamassageController;
-use App\Http\Controllers\LivreurFactureController;
+use App\Http\Controllers\FactureLivreurController;
+use App\Http\Controllers\FactureVendeurController;
 
 /*
 |--------------------------------------------------------------------------
@@ -65,9 +66,13 @@ Route::middleware(['auth:sanctum',IsActive::class])->group(function () {
     Route::post('updateStatutRetour', [RetourController::class,'updateStatutRetour']);
 
 
-    Route::post('generateLivreurFactures', [LivreurFactureController::class,'generateLivreurFactures']);
-    Route::apiResource('factureLivreur', LivreurFactureController::class);
-    Route::post('updateStatutFactureLivreur', [LivreurFactureController::class,'updateStatutFactureLivreur']);
+    Route::post('generateLivreurFactures', [FactureLivreurController::class,'generateLivreurFactures']);
+    Route::apiResource('factureLivreur', FactureLivreurController::class);
+    Route::post('updateStatutFactureLivreur', [FactureLivreurController::class,'updateStatutFactureLivreur']);
+
+    Route::post('generateVendeurFactures', [FactureVendeurController::class,'generateVendeurFactures']);
+    Route::apiResource('factureVendeur', FactureVendeurController::class);
+    Route::post('updateStatutFactureVendeur', [FactureVendeurController::class,'updateStatutFactureVendeur']);
 
 
 

@@ -16,18 +16,34 @@ class Facture extends Model
         return $this->morphMany(History::class, 'historiable')->orderBy('id', 'desc');;
     }
 
-    public function colis()
+    public function colisLivreur()
     {
-        return $this->hasMany(Colis::class);
+        return $this->hasMany(Colis::class,'facture_livreur_id');
     }
 
-    public function ramassages()
+    public function ramassagesLivreur()
     {
-        return $this->hasMany(Ramassage::class);
+        return $this->hasMany(Ramassage::class,'facture_livreur_id');
     }
 
-    public function retours()
+    public function retoursLivreur()
     {
-        return $this->hasMany(Retour::class);
+        return $this->hasMany(Retour::class,'facture_livreur_id');
+    }
+
+
+    public function colisVendeur()
+    {
+        return $this->hasMany(Colis::class,'facture_vendeur_id');
+    }
+
+    public function ramassagesVendeur()
+    {
+        return $this->hasMany(Ramassage::class,'facture_vendeur_id');
+    }
+
+    public function retoursVendeur()
+    {
+        return $this->hasMany(Retour::class,'facture_vendeur_id');
     }
 }

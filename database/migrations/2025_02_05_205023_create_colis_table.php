@@ -19,9 +19,10 @@ return new class extends Migration
             $table->decimal('frais_livraison');
             $table->decimal('frais_livreur')->nullable();
             $table->decimal('montant');
-            $table->foreignId('facture_id')->nullable()->constrained();
             $table->foreignId('vendeur_id')->constrained(  table: 'users', indexName: 'colis_vendeur_id' );
             $table->foreignId('livreur_id')->nullable()->constrained(  table: 'users', indexName: 'colis_livreur_id' );
+            $table->foreignId('facture_livreur_id')->nullable()->constrained(  table: 'factures', indexName: 'colis_facture_livreur_id' );
+            $table->foreignId('facture_vendeur_id')->nullable()->constrained(  table: 'factures', indexName: 'colis_facture_vendeur_id' );
             $table->foreignId('ramassage_id')->nullable()->constrained();
             $table->foreignId('retour_id')->nullable()->constrained();
             $table->string('nom_client');
@@ -51,6 +52,8 @@ return new class extends Migration
             $table->dropForeign(['tarif_id']);
             $table->dropForeign(['vendeur_id']);
             $table->dropForeign(['livreur_id']);
+            $table->dropForeign(['facture_livreur_id']);
+            $table->dropForeign(['facture_vendeur_id']);
             $table->dropForeign(['created_by']);
 		});
 
