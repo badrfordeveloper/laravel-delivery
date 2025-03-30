@@ -58,6 +58,7 @@ class FactureVendeurController extends Controller
         // Find the user by ID
         $item = Facture::findOrFail($request->id);
         $oldStatut = $item->statut;
+        Log::info('oldStatut  : '.$oldStatut);
 
         if($request->statut == "COMMENTAIRE"){
             //add to history
@@ -66,24 +67,24 @@ class FactureVendeurController extends Controller
             $history->commentaire = $request->commentaire;
             $item->histories()->save($history);
         }
-        else if($request->statut == "FACTURE"  &&  in_array($oldStatut,["EN_ATTENTE"])){
-            $request->validate([
+        else if($request->statut == "EN_COURS"  &&  in_array($oldStatut,["EN_ATTENTE"])){
+        /*     $request->validate([
                 'file' => 'required|file|image|max:2048',
             ]);
-            $filePath = $request->file('file')->store('histories/factures/vendeurs/'.$item->code, 'public');
+            $filePath = $request->file('file')->store('histories/factures/vendeurs/'.$item->code, 'public'); */
             $item->statut = $request->statut;
-            $item->montant_gestionnaire = $request->montant;
-            $item->recu_path = $filePath;
+           /*  $item->montant_gestionnaire = $request->montant; */
+        /*     $item->recu_path = $filePath; */
             $item->save();
             //add to history
             $history = new History();
             $history->statut = $request->statut;
             $history->commentaire = $request->commentaire;
-            $history->montant = $request->montant;
-            $history->file_path = $filePath;
+           /*  $history->montant = $request->montant; */
+            /* $history->file_path = $filePath; */
             $item->histories()->save($history);
         }
-        else if($request->statut == "VALIDE"  &&  in_array($oldStatut,["FACTURE"])){
+        else if($request->statut == "PAYE"  &&  in_array($oldStatut,["EN_COURS"])){
             $item->statut = $request->statut;
             $item->save();
             //add to history
@@ -135,10 +136,10 @@ class FactureVendeurController extends Controller
             foreach ($colisGrouped as $group) {
                 $result['nombre_'.strtolower($group->statut)] = $group->colis_count;
                 $result['nombre_total'] += $group->colis_count;
-              /*   if(in_array($group->statut,['LIVRE', 'LIVRE_PARTIELLEMENT'])){ */
+                if(in_array($group->statut,['LIVRE', 'LIVRE_PARTIELLEMENT'])){
                     $result['frais_colis'] += $group->total_frais_livraison;
                     $result['montant_encaisse'] += $group->total_montant;
-                /* } */
+                }
             }
             // Get the retours for this vendeur, grouped by statut
             $queryRetour =  $vendeur->retoursVendeur()
