@@ -335,7 +335,7 @@ class RamassageController extends Controller
                                         ]);
                 $countCommon = $queryCommonColis->count();
                 if(count($commonColis) == $countCommon){
-                    $result['success'][]="les colis trouver de remassage est bien modifiée";
+                    $result['success'][]="Confirmer";
                     logger('success commonColis');
                     //
                 }else{

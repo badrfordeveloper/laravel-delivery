@@ -276,7 +276,12 @@ class ColisController extends Controller
         }
         else if(in_array($request->statut,["LIVRE_PARTIELLEMENT","ANNULE","PAS_REPONSE","REPORTE","REFUSE"])  &&  in_array($oldStatut,["EN_COURS_LIVRAISON"])){
             $request->validate([
-                'file' => 'required|file|image|max:2048',
+                'file' => [
+                    'required',
+                    'file',
+                    'mimes:jpg,jpeg,png,gif,pdf',  // Accepts both images and PDFs
+                    'max:4096'                      // 4MB limit
+                ]
             ]);
             $filePath = $request->file('file')->store('histories/colis/'.$item->code, 'public');
 
@@ -287,7 +292,13 @@ class ColisController extends Controller
 
             $item->save();
             //add to history
+
+
             $history = new History();
+
+            if(in_array($request->statut,["REPORTE"])){
+                $history->date = $request->date;
+            }
             $history->statut = $request->statut;
             $history->commentaire = $request->commentaire;
             $history->file_path = $filePath ;
