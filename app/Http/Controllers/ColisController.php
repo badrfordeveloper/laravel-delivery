@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Colis;
 use App\Models\Tarif;
@@ -17,10 +18,20 @@ class ColisController extends Controller
 {
     public function index(Request $request)
     {
-        $textFilters = ['code','statut','nom_client','tel_client'];
+        $textFilters = ['code','nom_client','tel_client'];
+        $selectsFilters = ["statut" =>"colis.statut" ,"livreur_id" => "colis.livreur_id","vendeur_id" => "colis.vendeur_id"];
+
+
         $query = Colis::query()->select('colis.*','livreurs.lastName AS livreur' ,'vendeurs.lastName AS vendeur')
-        ->leftJoin('users as livreurs', 'colis.livreur_id', '=', 'livreurs.id')
-            ->leftJoin('users as vendeurs', 'colis.vendeur_id', '=', 'vendeurs.id');
+                ->leftJoin('users as livreurs', 'colis.livreur_id', '=', 'livreurs.id')
+                ->leftJoin('users as vendeurs', 'colis.vendeur_id', '=', 'vendeurs.id');
+
+        foreach ($selectsFilters  as $filter => $filterValue) {
+            if( $request->has($filter) && $request->{$filter}!="" ){
+                $query->where($filterValue,$request->{$filter});
+            }
+        }
+
         foreach ($textFilters  as $filter) {
             if( $filter == 'tel_client' && $request->has($filter) && !empty($request->{$filter})){
                 $query->where($filter,'like',"%".$request->{$filter}."%");
@@ -29,12 +40,19 @@ class ColisController extends Controller
             }
         }
         $user = auth()->user();
+
         if($user->isVendeur()){
-            $query->where('vendeur_id',$user->id);
+            $query->where('colis.vendeur_id',$user->id);
         }else if ($user->isLivreur()){
-            $query->where('livreur_id',$user->id);
+            $query->where('colis.livreur_id',$user->id);
         }
 
+
+        $from = Carbon::parse($request->begin_date)->startOfDay()->toDateTimeString();
+        $to = Carbon::parse($request->end_date)->endOfDay()->toDateTimeString();
+        logger('herer');
+        logger('herer' . $from .'-' .$to);
+        $query->whereBetween('colis.created_at', [$from, $to]);
 
         $query->orderBy('id','desc');
         $result = $query->paginate($request->itemsPerPage);

@@ -16,7 +16,7 @@ class UsersRolesSeeder extends Seeder
     {
         $userAdmin = User::create([
             'lastName' =>"admin",
-            'firstName' =>"admiiin",
+            'firstName' =>"prenomAdmin",
             'email' =>"admin@gmail.com",
             'active' =>true,
             'password' =>bcrypt("admin@gmail.com"),
@@ -49,7 +49,7 @@ class UsersRolesSeeder extends Seeder
         ]);
         $userLivreur1 = User::create([
             'lastName' =>"livreur1",
-            'firstName' =>"livreur1",
+            'firstName' =>"livreurPrenom1",
             'email' =>"livreur1@gmail.com",
             'active' =>true,
             'password' =>bcrypt("livreur1@gmail.com"),
@@ -60,7 +60,7 @@ class UsersRolesSeeder extends Seeder
         ]);
         $userLivreur2 = User::create([
             'lastName' =>"livreur2",
-            'firstName' =>"livreur2",
+            'firstName' =>"livreurPrenom2",
             'email' =>"livreur2@gmail.com",
             'active' =>true,
             'password' =>bcrypt("livreur2@gmail.com"),
@@ -71,7 +71,7 @@ class UsersRolesSeeder extends Seeder
         ]);
         $userVendeur1 = User::create([
             'lastName' =>"vendeur1",
-            'firstName' =>"vendeur1",
+            'firstName' =>"vendeurPrenom1",
             'email' =>"vendeur1@gmail.com",
             'active' =>true,
             'password' =>bcrypt("vendeur1@gmail.com"),
@@ -82,7 +82,7 @@ class UsersRolesSeeder extends Seeder
         ]);
         $userVendeur2 = User::create([
             'lastName' =>"vendeur2",
-            'firstName' =>"vendeur2",
+            'firstName' =>"vendeurPrenom2",
             'email' =>"vendeur2@gmail.com",
             'active' =>true,
             'password' =>bcrypt("vendeur2@gmail.com"),

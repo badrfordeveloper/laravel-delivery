@@ -139,13 +139,21 @@ class UserController extends Controller
         return 'Utilisateur bien Modifié';
     }
 
-    public function ramasseurs(Request $request)
+    public function ramasseurs()
     {
         return User::whereHas('roles', function($query) {
             $query->where('name',"livreur");
         })
-       /*  ->select('id as value' ,DB::raw('CONCAT(firstName, " ", lastName) AS title')) */
-        ->select('id as value' ,'lastName AS title')
+        ->select('id as value' ,DB::raw('CONCAT(firstName, " ", lastName) AS title'))
+        ->get();
+
+    }
+    public function vendeurs()
+    {
+        return User::whereHas('roles', function($query) {
+            $query->where('name',"vendeur");
+        })
+        ->select('id as value' ,'store_name AS title')
         ->get();
 
     }

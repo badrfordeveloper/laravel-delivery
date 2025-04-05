@@ -27,7 +27,10 @@ class RamassageController extends Controller
         foreach ($textFilters  as $filter) {
             if( $filter == 'tel_vendeur' && $request->has($filter) && !empty($request->{$filter})){
                 $query->where($filter,'like',"%".$request->{$filter}."%");
-            }else if($request->has($filter) && !empty($request->{$filter})){
+            }else if( $filter == 'statut' && $request->has($filter) && !empty($request->{$filter})){
+                $query->where($filter,'like',$request->{$filter});
+            }
+            else if($request->has($filter) && !empty($request->{$filter})){
                 $query->where($filter,'like',$request->{$filter}."%");
             }
         }

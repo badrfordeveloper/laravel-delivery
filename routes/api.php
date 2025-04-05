@@ -43,6 +43,7 @@ Route::middleware(['auth:sanctum',IsActive::class])->group(function () {
     Route::get('rolesList', [RoleController::class,'rolesList']);
     Route::apiResource('users', UserController::class);
     Route::get('ramasseurs', [UserController::class,'ramasseurs']);
+    Route::get('vendeurs', [UserController::class,'vendeurs']);
 
     Route::apiResource('tarifs', TarifController::class);
     Route::apiResource('colis', ColisController::class);
