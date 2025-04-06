@@ -2,32 +2,47 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Colis;
 use App\Models\Facture;
 use App\Models\History;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class FactureLivreurController extends Controller
 {
     public function index(Request $request)
     {
-        $textFilters = ['code','statut'];
-        $query = Facture::query()->select('factures.*','livreurs.lastName AS livreur' )
+        $textFilters = ['code'];
+        $selectsFilters = ["statut" =>"factures.statut" ,"livreur_id" => "factures.livreur_id"];
+
+        $query = Facture::query()->select('factures.*',DB::raw('CONCAT(livreurs.firstName, " ", livreurs.lastName) AS livreur'))
             ->leftJoin('users as livreurs', 'factures.livreur_id', '=', 'livreurs.id')
             ->whereNotNull('livreur_id');
+
+        foreach ($selectsFilters  as $filter => $filterValue) {
+            if( $request->has($filter) && $request->{$filter}!="" ){
+                $query->where($filterValue,$request->{$filter});
+            }
+        }
+
         foreach ($textFilters  as $filter) {
             if($request->has($filter) && !empty($request->{$filter})){
                 $query->where($filter,'like',$request->{$filter}."%");
             }
         }
+
         $user = auth()->user();
         if ($user->isLivreur()){
             $query->where('livreur_id',$user->id);
         }
 
+        $from = Carbon::parse($request->begin_date)->startOfDay()->toDateTimeString();
+        $to = Carbon::parse($request->end_date)->endOfDay()->toDateTimeString();
+        $query->whereBetween('factures.created_at', [$from, $to]);
 
         $query->orderBy('id','desc');
         $result = $query->paginate($request->itemsPerPage);

@@ -22,7 +22,7 @@ class ColisController extends Controller
         $selectsFilters = ["statut" =>"colis.statut" ,"livreur_id" => "colis.livreur_id","vendeur_id" => "colis.vendeur_id"];
 
 
-        $query = Colis::query()->select('colis.*','livreurs.lastName AS livreur' ,'vendeurs.lastName AS vendeur')
+        $query = Colis::query()->select('colis.*',DB::raw('CONCAT(livreurs.firstName, " ", livreurs.lastName) AS livreur') ,'vendeurs.store AS vendeur')
                 ->leftJoin('users as livreurs', 'colis.livreur_id', '=', 'livreurs.id')
                 ->leftJoin('users as vendeurs', 'colis.vendeur_id', '=', 'vendeurs.id');
 
@@ -39,6 +39,7 @@ class ColisController extends Controller
                 $query->where($filter,'like',$request->{$filter}."%");
             }
         }
+
         $user = auth()->user();
 
         if($user->isVendeur()){
@@ -50,8 +51,6 @@ class ColisController extends Controller
 
         $from = Carbon::parse($request->begin_date)->startOfDay()->toDateTimeString();
         $to = Carbon::parse($request->end_date)->endOfDay()->toDateTimeString();
-        logger('herer');
-        logger('herer' . $from .'-' .$to);
         $query->whereBetween('colis.created_at', [$from, $to]);
 
         $query->orderBy('id','desc');
@@ -150,7 +149,7 @@ class ColisController extends Controller
     public function show($id)
     {
 
-        $item = Colis::query()->select('colis.*','livreurs.lastName AS livreur','livreurs.phone AS tel_livreur' ,'vendeurs.lastName AS vendeur','vendeurs.phone AS tel_vendeur','ramassages.code AS code_ramassage'   )
+        $item = Colis::query()->select('colis.*',DB::raw('CONCAT(livreurs.firstName, " ", livreurs.lastName) AS livreur'),'livreurs.phone AS tel_livreur' ,'vendeurs.lastName AS vendeur','vendeurs.phone AS tel_vendeur','ramassages.code AS code_ramassage'   )
             ->leftJoin('users as livreurs', 'colis.livreur_id', '=', 'livreurs.id')
             ->leftJoin('users as vendeurs', 'colis.vendeur_id', '=', 'vendeurs.id')
             ->leftJoin('ramassages', 'colis.ramassage_id', '=', 'ramassages.id')
@@ -244,7 +243,7 @@ class ColisController extends Controller
 
         // Find the user by ID
         $item = Colis::findOrFail($request->id);
-        if(in_array($item->statut,["ENTREPOT"])){
+        if(in_array($item->statut,["ENTREPOT","EN_COURS_LIVRAISON","REPORTE","PAS_REPONSE"])){
             $item->livreur_id = $request->livreur_id;
             $item->frais_livreur = $request->frais_livreur;
             $item->save();
@@ -263,11 +262,26 @@ class ColisController extends Controller
         $item = Colis::findOrFail($request->id);
         $oldStatut = $item->statut;
 
+        // make sur to set the livreur before change status
         if( $request->statut != "COMMENTAIRE" && is_null($item->livreur_id) ){
             return response()->json(['message' => 'Merci d\'assigner livreur'], 422);
         }
 
+        $user = auth()->user();
+
+
+
+
+
         if($request->statut == "COMMENTAIRE"){
+            //add to history
+            $history = new History();
+            $history->statut = $request->statut;
+            $history->commentaire = $request->commentaire;
+            $item->histories()->save($history);
+        }else if($user->isAdmin() && in_array($request->statut ,["EN_ATTENTE","ENTREPOT"])){
+            $item->statut = $request->statut;
+            $item->save();
             //add to history
             $history = new History();
             $history->statut = $request->statut;

@@ -15,12 +15,13 @@ return new class extends Migration
             $table->id();
             $table->string('lastName');
             $table->string('firstName');
+            $table->string('cin')->nullable()->unique();
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->boolean('active')->default(false);
             $table->string('phone')->nullable();
-            $table->string('store_name')->nullable();
+            $table->string('store')->nullable()->unique();
             $table->string('ville')->nullable();
             $table->string('address')->nullable();
             $table->string('bank_name')->nullable();

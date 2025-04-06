@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Colis;
 use App\Models\Tarif;
-use App\Models\History;
 use App\Models\Retour;
+use App\Models\History;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -19,16 +20,22 @@ class RetourController extends Controller
 {
     public function index(Request $request)
     {
-        $textFilters = ['code','statut','nom_vendeur','tel_vendeur'];
-        $query = Retour::query()->select('retours.*','ramasseurs.lastName AS ramasseur','ramasseurs.phone AS tel_ramasseur' ,'vendeurs.lastName AS vendeur' )
+        $textFilters = ['code','nom_vendeur','tel_vendeur'];
+        $selectsFilters = ["statut" =>"retours.statut" ,"livreur_id" => "retours.ramasseur_id","vendeur_id" => "retours.vendeur_id"];
+
+        $query = Retour::query()->select('retours.*',DB::raw('CONCAT(ramasseurs.firstName, " ", ramasseurs.lastName) AS ramasseur'),'ramasseurs.phone AS tel_ramasseur' ,'vendeurs.lastName AS vendeur' )
 
             ->leftJoin('users as ramasseurs', 'retours.ramasseur_id', '=', 'ramasseurs.id')
             ->leftJoin('users as vendeurs', 'retours.vendeur_id', '=', 'vendeurs.id');
+        foreach ($selectsFilters  as $filter => $filterValue) {
+            if( $request->has($filter) && $request->{$filter}!="" ){
+                $query->where($filterValue,$request->{$filter});
+            }
+        }
+
         foreach ($textFilters  as $filter) {
             if( $filter == 'tel_vendeur' && $request->has($filter) && !empty($request->{$filter})){
                 $query->where($filter,'like',"%".$request->{$filter}."%");
-            }else if( $filter == 'statut' && $request->has($filter) && !empty($request->{$filter})){
-                $query->where($filter,'like',$request->{$filter});
             }else if($request->has($filter) && !empty($request->{$filter})){
                 $query->where($filter,'like',$request->{$filter}."%");
             }
@@ -39,6 +46,9 @@ class RetourController extends Controller
         }else if ($user->isLivreur()){
             $query->where('ramasseur_id',$user->id);
         }
+        $from = Carbon::parse($request->begin_date)->startOfDay()->toDateTimeString();
+        $to = Carbon::parse($request->end_date)->endOfDay()->toDateTimeString();
+        $query->whereBetween('retours.created_at', [$from, $to]);
 
         $query->orderBy('retours.id','desc');
         $result = $query->paginate($request->itemsPerPage);
@@ -224,7 +234,8 @@ class RetourController extends Controller
 
         // Find the user by ID
         $item = Retour::findOrFail($request->id);
-        if(in_array($item->statut,["EN_ATTENTE","PREPARER"])){
+       // if(in_array($item->statut,["EN_ATTENTE","PREPARER"])){
+        if(true){
             $item->ramasseur_id = $request->ramasseur_id;
             $item->frais_ramasseur = $request->frais_ramasseur;
             $item->save();
@@ -284,6 +295,15 @@ class RetourController extends Controller
             $history->statut = $request->statut;
             $history->commentaire = $request->commentaire;
             $history->date = $request->date;
+            $item->histories()->save($history);
+        }
+        else if($request->statut == "ANNULE" ){
+            $item->statut = $request->statut;
+            $item->save();
+            //add to history
+            $history = new History();
+            $history->statut = $request->statut;
+            $history->commentaire = $request->commentaire;
             $item->histories()->save($history);
         }
         else{

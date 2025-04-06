@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Colis;
 use App\Models\Facture;
@@ -14,10 +15,18 @@ class FactureVendeurController extends Controller
 {
     public function index(Request $request)
     {
-        $textFilters = ['code','statut'];
-        $query = Facture::query()->select('factures.*','vendeurs.lastName AS vendeur' )
+        $textFilters = ['code'];
+        $selectsFilters = ["statut" =>"factures.statut" ,"vendeur_id" => "factures.vendeur_id"];
+
+        $query = Facture::query()->select('factures.*','vendeurs.store AS vendeur' )
             ->leftJoin('users as vendeurs', 'factures.vendeur_id', '=', 'vendeurs.id')
             ->whereNotNull('vendeur_id');
+
+        foreach ($selectsFilters  as $filter => $filterValue) {
+            if( $request->has($filter) && $request->{$filter}!="" ){
+                $query->where($filterValue,$request->{$filter});
+            }
+        }
         foreach ($textFilters  as $filter) {
             if($request->has($filter) && !empty($request->{$filter})){
                 $query->where($filter,'like',$request->{$filter}."%");
@@ -28,8 +37,12 @@ class FactureVendeurController extends Controller
             $query->where('vendeur_id',$user->id);
         }
 
+        $from = Carbon::parse($request->begin_date)->startOfDay()->toDateTimeString();
+        $to = Carbon::parse($request->end_date)->endOfDay()->toDateTimeString();
+        $query->whereBetween('factures.created_at', [$from, $to]);
 
         $query->orderBy('id','desc');
+
         $result = $query->paginate($request->itemsPerPage);
         return response()->json([
             'items' => $result->items(),

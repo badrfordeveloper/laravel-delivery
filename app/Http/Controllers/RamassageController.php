@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Colis;
 use App\Models\Tarif;
@@ -19,16 +20,22 @@ class RamassageController extends Controller
 {
     public function index(Request $request)
     {
-        $textFilters = ['code','statut','nom_vendeur','tel_vendeur'];
-        $query = Ramassage::query()->select('ramassages.*','ramasseurs.lastName AS ramasseur','ramasseurs.phone AS tel_ramasseur' ,'vendeurs.lastName AS vendeur' )
+        $textFilters = ['code','nom_vendeur','tel_vendeur'];
+        $selectsFilters = ["statut" =>"ramassages.statut" ,"livreur_id" => "ramassages.ramasseur_id","vendeur_id" => "ramassages.vendeur_id"];
+
+        $query = Ramassage::query()->select('ramassages.*',DB::raw('CONCAT(ramasseurs.firstName, " ", ramasseurs.lastName) AS ramasseur') ,'ramasseurs.phone AS tel_ramasseur' ,'vendeurs.store AS vendeur' )
 
             ->leftJoin('users as ramasseurs', 'ramassages.ramasseur_id', '=', 'ramasseurs.id')
             ->leftJoin('users as vendeurs', 'ramassages.vendeur_id', '=', 'vendeurs.id');
+            foreach ($selectsFilters  as $filter => $filterValue) {
+                if( $request->has($filter) && $request->{$filter}!="" ){
+                    $query->where($filterValue,$request->{$filter});
+                }
+            }
+
         foreach ($textFilters  as $filter) {
             if( $filter == 'tel_vendeur' && $request->has($filter) && !empty($request->{$filter})){
                 $query->where($filter,'like',"%".$request->{$filter}."%");
-            }else if( $filter == 'statut' && $request->has($filter) && !empty($request->{$filter})){
-                $query->where($filter,'like',$request->{$filter});
             }
             else if($request->has($filter) && !empty($request->{$filter})){
                 $query->where($filter,'like',$request->{$filter}."%");
@@ -40,6 +47,11 @@ class RamassageController extends Controller
         }else if ($user->isLivreur()){
             $query->where('ramasseur_id',$user->id);
         }
+
+        $from = Carbon::parse($request->begin_date)->startOfDay()->toDateTimeString();
+        $to = Carbon::parse($request->end_date)->endOfDay()->toDateTimeString();
+        $query->whereBetween('ramassages.created_at', [$from, $to]);
+
 
         $query->orderBy('ramassages.id','desc');
         $result = $query->paginate($request->itemsPerPage);

@@ -55,6 +55,8 @@ class UserController extends Controller
             'password' => 'required|min:8',
             'active' => ['required'],
             'phone' => ['required'],
+            'store' => ['nullable|unique:users'],
+            'cin' => ['nullable|unique:users'],
             'role' => [
                 'required',
                 Rule::notIn(['admin']),
@@ -65,10 +67,11 @@ class UserController extends Controller
         $user->lastName = $request->lastName;
         $user->firstName = $request->firstName;
         $user->email = $request->email;
+        $user->cin = $request->cin;
         $user->password = bcrypt($request->password);
         $user->active = $request->boolean('active');
         $user->phone = $request->phone;
-        $user->store_name = $request->store_name;
+        $user->store = $request->store;
         $user->ville = $request->ville;
         $user->address = $request->address;
         $user->bank_name = $request->bank_name;
@@ -85,9 +88,10 @@ class UserController extends Controller
             'lastName' => $user->lastName,
             'firstName' => $user->firstName,
             'email' => $user->email,
+            'cin' => $user->cin,
             'active' => $user->active,
             'phone' =>$user->phone,
-            'store_name' => $user->store_name,
+            'store' => $user->store,
             'ville' => $user->ville,
             'address' => $user->address,
             'bank_name' => $user->bank_name,
@@ -106,6 +110,14 @@ class UserController extends Controller
                 'required',
                 Rule::unique('users')->ignore($id), // Exclude current user ID
             ],
+            'store' => [
+                'nullable',
+                Rule::unique('users')->ignore($id), // Exclude current user ID
+            ],
+            'cin' => [
+                'nullable',
+                Rule::unique('users')->ignore($id), // Exclude current user ID
+            ],
             'password' => 'nullable|min:8',
             'active' => ['required'],
             'phone' => ['required'],
@@ -120,12 +132,13 @@ class UserController extends Controller
         $user->lastName = $request->lastName;
         $user->firstName = $request->firstName;
         $user->email = $request->email;
+        $user->cin = $request->cin;
         if($request->has('password') && !empty($request->password) ){
             $user->password = bcrypt($request->password);
         }
         $user->active = $request->boolean('active');
         $user->phone = $request->phone;
-        $user->store_name = $request->store_name;
+        $user->store = $request->store;
         $user->ville = $request->ville;
         $user->address = $request->address;
         $user->bank_name = $request->bank_name;
@@ -153,7 +166,7 @@ class UserController extends Controller
         return User::whereHas('roles', function($query) {
             $query->where('name',"vendeur");
         })
-        ->select('id as value' ,'store_name AS title')
+        ->select('id as value' ,'store AS title')
         ->get();
 
     }
