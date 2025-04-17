@@ -55,8 +55,8 @@ class UserController extends Controller
             'password' => 'required|min:8',
             'active' => ['required'],
             'phone' => ['required'],
-            'store' => ['nullable|unique:users'],
-            'cin' => ['nullable|unique:users'],
+            'store' => ['nullable','unique:users'],
+            'cin' => ['nullable','unique:users'],
             'role' => [
                 'required',
                 Rule::notIn(['admin']),
