@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 use Validator;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -18,34 +20,38 @@ class AuthController extends Controller
     * @param  [string] password_confirmation
     * @return [string] message
     */
-   /*  public function register(Request $request)
+    public function register(Request $request)
     {
+        Log::info('register new user : '.json_encode($request->all()));
+
         $request->validate([
-            'name' => 'required|string',
-            'email'=>'required|string|unique:users',
-            'password'=>'required|string',
-            'c_password' => 'required|same:password'
+            'lastName' => ['required'],
+            'firstName' => ['required'],
+            'email' => 'required|unique:users',
+            'password' => 'required|min:6',
+            'phone' => ['required'],
+            'ville' => ['required'],
+            'store' => ['nullable','unique:users'],
+            'role' => [
+                'required',
+                Rule::in(['vendeur','livreur']),
+            ],
         ]);
 
-        $user = new User([
-            'name'  => $request->name,
-            'email' => $request->email,
-            'password' => bcrypt($request->password),
-        ]);
+        $user = new User();
+        $user->lastName = $request->lastName;
+        $user->firstName = $request->firstName;
+        $user->email = $request->email;
+        $user->password = bcrypt($request->password);
+        $user->active = false;
+        $user->phone = $request->phone;
+        $user->store = $request->store;
+        $user->ville = $request->ville;
+        $user->save();
+        $user->assignRole( $request->role);
 
-        if($user->save()){
-            $tokenResult = $user->createToken('Personal Access Token');
-            $token = $tokenResult->plainTextToken;
-
-            return response()->json([
-            'message' => 'Successfully created user!',
-            'accessToken'=> $token,
-            ],201);
-        }
-        else{
-            return response()->json(['error'=>'Provide proper details']);
-        }
-    } */
+        return 'Utilisateur bien ajouté';
+    }
     public function login(Request $request)
     {
         $request->validate([

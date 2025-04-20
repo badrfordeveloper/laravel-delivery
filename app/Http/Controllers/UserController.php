@@ -52,7 +52,7 @@ class UserController extends Controller
             'lastName' => ['required'],
             'firstName' => ['required'],
             'email' => 'required|unique:users',
-            'password' => 'required|min:8',
+            'password' => 'required|min:6',
             'active' => ['required'],
             'phone' => ['required'],
             'store' => ['nullable','unique:users'],
@@ -118,7 +118,7 @@ class UserController extends Controller
                 'nullable',
                 Rule::unique('users')->ignore($id), // Exclude current user ID
             ],
-            'password' => 'nullable|min:8',
+            'password' => 'nullable|min:6',
             'active' => ['required'],
             'phone' => ['required'],
             'role' => [

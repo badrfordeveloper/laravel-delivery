@@ -13,6 +13,7 @@ use App\Http\Controllers\RetourController;
 use App\Http\Controllers\RamassageController;
 use App\Http\Controllers\FactureLivreurController;
 use App\Http\Controllers\FactureVendeurController;
+use App\Http\Controllers\FrontController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,6 +25,7 @@ use App\Http\Controllers\FactureVendeurController;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+Route::post('/front/mailContact', [FrontController::class, 'mailContact']);
 
 Route::group(['prefix' => 'auth'], function () {
     Route::post('login', [AuthController::class, 'login']);
