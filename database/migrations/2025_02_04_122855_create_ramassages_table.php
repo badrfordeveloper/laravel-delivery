@@ -26,7 +26,7 @@ return new class extends Migration
             $table->integer('nombre_colis');
             $table->integer('nombre_colis_ramasseur')->nullable();
             $table->dateTime('date_reporte')->nullable();
-            $table->foreignId('tarif_id')->constrained();
+            $table->foreignId('zone_id')->constrained();
             $table->string('destination');
             $table->foreignId('created_by')->constrained(  table: 'users', indexName: 'ramassage_creator_id' );
             $table->timestamps();
@@ -41,7 +41,7 @@ return new class extends Migration
     {
         Schema::table('ramassages', function(Blueprint $table)
 		{
-            $table->dropForeign(['tarif_id']);
+            $table->dropForeign(['zone_id']);
             $table->dropForeign(['vendeur_id']);
             $table->dropForeign(['ramasseur_id']);
             $table->dropForeign(['facture_livreur_id']);

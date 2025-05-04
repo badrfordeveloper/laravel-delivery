@@ -15,6 +15,11 @@ class Colis extends Model
         return $this->belongsTo(Ramassage::class);
     }
 
+    public function pricing()
+    {
+        return $this->belongsTo(Pricing::class);
+    }
+
     public function histories()
     {
         return $this->morphMany(History::class, 'historiable')->orderBy('id', 'desc');;

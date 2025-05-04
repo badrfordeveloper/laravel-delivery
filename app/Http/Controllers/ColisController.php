@@ -7,6 +7,8 @@ use App\Models\User;
 use App\Models\Colis;
 use App\Models\Tarif;
 use App\Models\History;
+use App\Models\Pricing;
+use App\Models\Zone;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -51,7 +53,7 @@ class ColisController extends Controller
 
         $from = Carbon::parse($request->begin_date)->startOfDay()->toDateTimeString();
         $to = Carbon::parse($request->end_date)->endOfDay()->toDateTimeString();
-        $query->whereBetween('colis.created_at', [$from, $to]);
+        $query->whereBetween('colis.updated_at', [$from, $to]);
 
         $query->orderBy('id','desc');
         $result = $query->paginate($request->itemsPerPage);
@@ -65,11 +67,15 @@ class ColisController extends Controller
     {
         Log::info('new colis : '.json_encode($request->all()));
 
+
         $request->validate([
             'nom_client' => 'required',
             'tel_client' => 'required',
-            'tarif_id' => 'required',
+            'zone_id' => 'required',
+            'pricing_id' => 'required',
             'frais_livraison' => 'required',
+            'poids' => 'required',
+            'horaire' => 'required',
             'adresse' => 'required',
             'produit' => 'required',
             'montant' => 'required',
@@ -81,10 +87,16 @@ class ColisController extends Controller
         $item = new Colis();
         $item->nom_client = $request->nom_client;
         $item->tel_client = $request->tel_client;
-        $tarif = Tarif::find($request->tarif_id);
-        $item->tarif_id = $tarif->id;
-        $item->frais_livraison = $tarif->tarif;
-        $item->destination = $tarif->destination;
+        $item->horaire = $request->horaire;
+        $zone = Zone::find($request->zone_id);
+        $item->zone_id = $zone->id;
+        $item->destination = $zone->zone;
+        $pricing = Pricing::find($request->pricing_id);
+        $item->pricing_id = $pricing->id;
+        $item->poids = $pricing->poids;
+        $item->frais_livraison = $pricing->frais_livraison;
+        $item->frais_livreur = $pricing->frais_livreur;
+
         $item->adresse = $request->adresse;
         $item->produit = $request->produit;
         $item->montant = $request->montant;
@@ -101,7 +113,7 @@ class ColisController extends Controller
         $maxTries= 3;
         while($tries < $maxTries ){
             try {
-                $item->code = $this->generateCode($tarif->prefix);
+                $item->code = $this->generateCode($zone->prefix);
                 $item->save();
                 $tries = $maxTries;
                 return 'Colis bien ajoutée';
@@ -125,9 +137,9 @@ class ColisController extends Controller
 
     public function generateCode($prefix)
     {
-
+        $code = $prefix.'0';
         // Find the latest code with the same prefix
-        $latestColis = Colis::withTrashed()->where('code', 'like', $prefix . '%')
+        $latestColis = Colis::withTrashed()->where('code', 'like', $code . '%')
             ->orderBy('code', 'desc')
             ->first();
 
@@ -140,7 +152,7 @@ class ColisController extends Controller
         }
 
         // Format the number with leading zeros
-        $formattedNumber = str_pad($nextNumber, 7, '0', STR_PAD_LEFT);
+        $formattedNumber = str_pad($nextNumber, 9, '0', STR_PAD_LEFT);
 
         // Combine prefix and number to create the code
         return $prefix . $formattedNumber;
@@ -149,7 +161,8 @@ class ColisController extends Controller
     public function show($id)
     {
 
-        $item = Colis::query()->select('colis.*',DB::raw('CONCAT(livreurs.firstName, " ", livreurs.lastName) AS livreur'),'livreurs.phone AS tel_livreur' ,'vendeurs.lastName AS vendeur','vendeurs.phone AS tel_vendeur','ramassages.code AS code_ramassage'   )
+        $item = Colis::query()->
+        select('colis.*',DB::raw('CONCAT(livreurs.firstName, " ", livreurs.lastName) AS livreur'),'livreurs.phone AS tel_livreur' ,'vendeurs.store AS vendeur','vendeurs.phone AS tel_vendeur','ramassages.code AS code_ramassage'   )
             ->leftJoin('users as livreurs', 'colis.livreur_id', '=', 'livreurs.id')
             ->leftJoin('users as vendeurs', 'colis.vendeur_id', '=', 'vendeurs.id')
             ->leftJoin('ramassages', 'colis.ramassage_id', '=', 'ramassages.id')
@@ -168,8 +181,11 @@ class ColisController extends Controller
         $request->validate([
             'nom_client' => 'required',
             'tel_client' => 'required',
-            'tarif_id' => 'required',
+            'zone_id' => 'required',
+            'pricing_id' => 'required',
             'frais_livraison' => 'required',
+            'poids' => 'required',
+            'horaire' => 'required',
             'adresse' => 'required',
             'produit' => 'required',
             'montant' => 'required',
@@ -188,27 +204,34 @@ class ColisController extends Controller
         $item->essayage = $request->boolean('essayage');
         $item->ouvrir = $request->boolean('ouvrir');
         $item->echange = $request->boolean('echange');
+        $item->horaire = $request->horaire;
+
         // retries if users generate the same code at the same time
         $tries= 0;
         $maxTries= 3;
+        $newCodeMessage = "";
         while($tries < $maxTries ){
             try {
                 // check if updated destination
-                if($request->tarif_id != $item->tarif_id ){
-                    $tarif = Tarif::find($request->tarif_id);
-                    $item->tarif_id = $tarif->id;
-                    $item->frais_livraison = $tarif->tarif;
-                    $item->destination = $tarif->destination;
+                if($request->zone_id != $item->zone_id ){
+                    $zone = Zone::find($request->zone_id);
+                    $item->zone_id = $zone->id;
+                    $item->destination = $zone->zone;
                     $logCode = $item->code;
-                    $item->code = $this->generateCode($tarif->prefix);
-                    $item->save();
-                    $tries = $maxTries;
+                    $item->code = $this->generateCode($zone->prefix);
                     Log::info('update code colis : '. $logCode.' => '.$item->code);
-                    return 'Colis bien modifiée avec nouveau un code : '. $item->code;
+                    $newCodeMessage =' avec nouveau code : '. $item->code;
+                }
+                if($request->pricing_id != $item->pricing_id){
+                    $pricing = Pricing::find($request->pricing_id);
+                    $item->pricing_id = $pricing->id;
+                    $item->poids = $pricing->poids;
+                    $item->frais_livraison = $pricing->frais_livraison;
+                    $item->frais_livreur = $pricing->frais_livreur;
                 }
                 $item->save();
                 $tries = $maxTries;
-                return 'Colis bien modifiée';
+                return 'Colis bien modifiée '.$newCodeMessage;
             } catch (QueryException $e) {
                 logger('colis query exception'.$e->getMessage());
                 sleep(1);
@@ -247,6 +270,29 @@ class ColisController extends Controller
             $item->livreur_id = $request->livreur_id;
             $item->frais_livreur = $request->frais_livreur;
             $item->save();
+            return  'Colis bien modifiée' ;
+        }
+        else{
+            return response()->json(['message' => 'Statut invalide'], 422);
+        }
+    }
+
+    public function parametrerGroupColis(Request $request)
+    {
+       Log::info('parametrerGroupColis  : '.json_encode($request->all()));
+
+       $request->validate([
+            'ids' => ['required'],
+            'livreur_id' => ['required'],
+            'frais_livreur' => ['required']
+        ]);
+       //check status
+       $countColis =  Colis::whereIn('id',$request->ids)->whereIn('statut', ["EN_ATTENTE","ENTREPOT","EN_COURS_LIVRAISON","REPORTE","PAS_REPONSE"])->count();;
+        if($countColis == count($request->ids)){
+            Colis::whereIn('id',$request->ids)->update([
+                'livreur_id' => $request->livreur_id,
+                'frais_livreur' => $request->frais_livreur,
+            ]);
             return  'Colis bien modifiée' ;
         }
         else{

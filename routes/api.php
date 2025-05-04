@@ -8,7 +8,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ColisController;
-use App\Http\Controllers\TarifController;
+use App\Http\Controllers\ZoneController;
 use App\Http\Controllers\RetourController;
 use App\Http\Controllers\RamassageController;
 use App\Http\Controllers\FactureLivreurController;
@@ -47,9 +47,10 @@ Route::middleware(['auth:sanctum',IsActive::class])->group(function () {
     Route::get('ramasseurs', [UserController::class,'ramasseurs']);
     Route::get('vendeurs', [UserController::class,'vendeurs']);
 
-    Route::apiResource('tarifs', TarifController::class);
+    Route::apiResource('zones', ZoneController::class);
     Route::apiResource('colis', ColisController::class);
     Route::post('parametrerColis', [ColisController::class,'parametrerColis']);
+    Route::post('parametrerGroupColis', [ColisController::class,'parametrerGroupColis']);
     Route::post('updateStatutColis', [ColisController::class,'updateStatutColis']);
 
     Route::apiResource('ramassage', RamassageController::class);

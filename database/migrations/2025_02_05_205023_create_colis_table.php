@@ -28,13 +28,16 @@ return new class extends Migration
             $table->string('nom_client');
             $table->string('tel_client');
             $table->string('destination');
+            $table->string('horaire');
+            $table->string('poids');
             $table->string('adresse');
             $table->string('produit');
             $table->string('commentaire_vendeur')->nullable();
             $table->boolean('essayage');
             $table->boolean('ouvrir');
             $table->boolean('echange');
-            $table->foreignId('tarif_id')->constrained();
+            $table->foreignId('zone_id')->constrained();
+            $table->foreignId('pricing_id')->constrained();
             $table->foreignId('created_by')->constrained(  table: 'users', indexName: 'colis_creator_id' );
             $table->timestamps();
             $table->softDeletes();
@@ -49,7 +52,7 @@ return new class extends Migration
         Schema::table('colis', function(Blueprint $table)
 		{
             $table->dropForeign(['ramassage_id']);
-            $table->dropForeign(['tarif_id']);
+            $table->dropForeign(['zone_id']);
             $table->dropForeign(['vendeur_id']);
             $table->dropForeign(['livreur_id']);
             $table->dropForeign(['facture_livreur_id']);

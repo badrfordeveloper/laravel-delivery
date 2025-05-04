@@ -42,7 +42,7 @@ class FactureLivreurController extends Controller
 
         $from = Carbon::parse($request->begin_date)->startOfDay()->toDateTimeString();
         $to = Carbon::parse($request->end_date)->endOfDay()->toDateTimeString();
-        $query->whereBetween('factures.created_at', [$from, $to]);
+        $query->whereBetween('factures.updated_at', [$from, $to]);
 
         $query->orderBy('id','desc');
         $result = $query->paginate($request->itemsPerPage);

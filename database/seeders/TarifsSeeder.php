@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Tarif;
+use App\Models\Ville;
 use Illuminate\Database\Seeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
@@ -13,7 +14,11 @@ class TarifsSeeder extends Seeder
      */
     public function run(): void
     {
-       Tarif::create([
+        Ville::create([
+            'name' =>"casablanca",
+            'prefix' =>"CA",
+        ]);
+       /* Tarif::create([
             'destination' =>"casablanca-anfa",
             'delai_livraison' =>"24h",
             'prefix' =>"CAAF",
@@ -24,6 +29,6 @@ class TarifsSeeder extends Seeder
             'delai_livraison' =>"48h",
             'prefix' =>"CAZE",
             'tarif' =>15
-        ]);
+        ]); */
     }
 }

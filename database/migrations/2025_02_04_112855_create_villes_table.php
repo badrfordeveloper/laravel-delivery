@@ -11,13 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tarifs', function (Blueprint $table) {
+        Schema::create('villes', function (Blueprint $table) {
             $table->id();
-            $table->string('destination');
-            $table->float('tarif');
+            $table->string('name');
             $table->string('prefix')->unique();
-            $table->string('delai_livraison');
-            $table->timestamps();
             $table->softDeletes();
         });
     }
@@ -27,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tarifs');
+        Schema::dropIfExists('villes');
     }
 };

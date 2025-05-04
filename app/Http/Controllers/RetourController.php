@@ -8,6 +8,7 @@ use App\Models\Colis;
 use App\Models\Tarif;
 use App\Models\Retour;
 use App\Models\History;
+use App\Models\Zone;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -48,7 +49,7 @@ class RetourController extends Controller
         }
         $from = Carbon::parse($request->begin_date)->startOfDay()->toDateTimeString();
         $to = Carbon::parse($request->end_date)->endOfDay()->toDateTimeString();
-        $query->whereBetween('retours.created_at', [$from, $to]);
+        $query->whereBetween('retours.updated_at', [$from, $to]);
 
         $query->orderBy('retours.id','desc');
         $result = $query->paginate($request->itemsPerPage);
@@ -94,7 +95,7 @@ class RetourController extends Controller
         $request->validate([
             'nom_vendeur' => 'required',
             'tel_vendeur' => 'required',
-            'tarif_id' => 'required',
+            'zone_id' => 'required',
             'adresse' => 'required',
             'colis_ids' => 'required|array|min:1'
         ]);
@@ -102,9 +103,10 @@ class RetourController extends Controller
         $item = new Retour();
         $item->nom_vendeur = $request->nom_vendeur;
         $item->tel_vendeur = $request->tel_vendeur;
-        $tarif = Tarif::find($request->tarif_id);
-        $item->tarif_id = $tarif->id;
-        $item->destination = $tarif->destination;
+
+        $zone = Zone::find($request->zone_id);
+        $item->zone_id = $zone->id;
+        $item->destination = $zone->zone;
         $item->adresse = $request->adresse;
         $item->nombre_colis = count($request->colis_ids);
 
@@ -189,7 +191,7 @@ class RetourController extends Controller
         $request->validate([
             'nom_vendeur' => 'required',
             'tel_vendeur' => 'required',
-            'tarif_id' => 'required',
+            'zone_id' => 'required',
             'adresse' => 'required'
         ]);
 
@@ -199,10 +201,10 @@ class RetourController extends Controller
         $item->tel_vendeur = $request->tel_vendeur;
         $item->adresse = $request->adresse;
         $item->nombre_colis = count($request->colis_ids);
-        if($request->tarif_id != $item->tarif_id ){
-            $tarif = Tarif::find($request->tarif_id);
-            $item->tarif_id = $tarif->id;
-            $item->destination = $tarif->destination;
+        if($request->zone_id != $item->zone_id ){
+            $zone = Zone::find($request->zone_id);
+            $item->zone_id = $zone->id;
+            $item->destination = $zone->zone;
         }
         $item->save();
 
