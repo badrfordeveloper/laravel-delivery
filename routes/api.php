@@ -49,14 +49,17 @@ Route::middleware(['auth:sanctum',IsActive::class])->group(function () {
 
     Route::apiResource('zones', ZoneController::class);
     Route::apiResource('colis', ColisController::class);
+    Route::post('importColis', [ColisController::class,'importColis']);
     Route::post('parametrerColis', [ColisController::class,'parametrerColis']);
     Route::post('parametrerGroupColis', [ColisController::class,'parametrerGroupColis']);
+    Route::post('parametrerGroupRamassage', [RamassageController::class,'parametrerGroupRamassage']);
     Route::post('updateStatutColis', [ColisController::class,'updateStatutColis']);
 
     Route::apiResource('ramassage', RamassageController::class);
     Route::get('colisForRamassage', [RamassageController::class,'colisForRamassage']);
     Route::post('updateStatutRamassage', [RamassageController::class,'updateStatutRamassage']);
     Route::post('parametrerRamassage', [RamassageController::class,'parametrerRamassage']);
+    Route::post('parametrerGroupRamassage', [RamassageController::class,'parametrerGroupRamassage']);
 
     Route::post('scannerEntrepot', [RamassageController::class,'scannerEntrepot']);
 

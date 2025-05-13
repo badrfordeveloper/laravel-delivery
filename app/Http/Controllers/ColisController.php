@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Imports\ColisImport;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Colis;
@@ -15,9 +16,33 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\QueryException;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ColisController extends Controller
 {
+    public function importColis(Request $request)
+    {
+        logger('hh ') ;
+        logger($request->all());
+
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls'
+        ]);
+
+        try {
+            Excel::import(new ColisImport, $request->file('file'));
+
+            return response()->json([
+                'message' => 'Colis imported successfully'
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error importing file: ' . $e->getMessage()
+            ], 500);
+        }
+
+    }
     public function index(Request $request)
     {
         $textFilters = ['code','nom_client','tel_client'];
@@ -65,8 +90,8 @@ class ColisController extends Controller
 
     public function store(Request $request)
     {
-        Log::info('new colis : '.json_encode($request->all()));
 
+        Log::info('new colis : '.json_encode($request->all()));
 
         $request->validate([
             'nom_client' => 'required',

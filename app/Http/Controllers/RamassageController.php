@@ -260,6 +260,35 @@ class RamassageController extends Controller
         }
     }
 
+
+
+
+
+
+    public function parametrerGroupRamassage(Request $request)
+    {
+       Log::info('parametrerGroupRamassage  : '.json_encode($request->all()));
+       $request->validate([
+            'ids' => ['required'],
+            'ramasseur_id' => ['required'],
+            'frais_ramasseur' => ['required']
+        ]);
+        // Find the user by ID
+         //check status
+       $countRamassages =  Ramassage::whereIn('id',$request->ids)->whereIn('statut', ["EN_ATTENTE","EN_COURS_RAMASSAGE","REPORTE"])->count();;
+       if($countRamassages == count($request->ids)){
+            Ramassage::whereIn('id',$request->ids)->update([
+                'ramasseur_id' => $request->ramasseur_id,
+                'frais_ramasseur' => $request->frais_ramasseur,
+            ]);
+            return  'Ramassages bien modifiée' ;
+        }
+        else{
+            return response()->json(['message' => 'Statut invalide'], 422);
+        }
+
+    }
+
     public function updateStatutRamassage(Request $request)
     {
         Log::info('updateStatutRamassage  : '.json_encode($request->all()));
