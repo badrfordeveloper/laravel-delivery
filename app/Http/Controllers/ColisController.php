@@ -10,23 +10,28 @@ use App\Models\Tarif;
 use App\Models\History;
 use App\Models\Pricing;
 use App\Models\Zone;
+use App\Rules\MaxExcelRows;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\QueryException;
+use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ColisController extends Controller
 {
     public function importColis(Request $request)
     {
-        logger('hh ') ;
-        logger($request->all());
 
         $request->validate([
-            'file' => 'required|mimes:xlsx,xls'
+            'file' => [
+                'required',
+                'mimes:xlsx,xls',
+                new MaxExcelRows(50), // Maximum 50 rows
+                'max:5120' // 5MB file size limit
+            ]
         ]);
 
         try {
@@ -36,13 +41,22 @@ class ColisController extends Controller
                 'message' => 'Colis imported successfully'
             ], 200);
 
-        } catch (\Exception $e) {
+        }
+        catch (ValidationException $e) {
             return response()->json([
-                'message' => 'Error importing file: ' . $e->getMessage()
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+
+        }
+        catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Import failed',
+                'error' => $e->getMessage()
             ], 500);
         }
-
     }
+
     public function index(Request $request)
     {
         $textFilters = ['code','nom_client','tel_client'];

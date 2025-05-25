@@ -13,7 +13,7 @@ class ColisService
 {
 
     public function createColis($data){
-
+        logger($data);
         $item = new Colis();
         $item->nom_client = $data['nom_client'];
         $item->tel_client = $data['tel_client'];

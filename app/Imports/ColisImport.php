@@ -5,67 +5,51 @@ namespace App\Imports;
 use App\Models\Zone;
 use App\Models\Colis;
 use App\Models\Pricing;
+use App\Services\ColisService;
 use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
+use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow; // If your Excel has headers
+use Maatwebsite\Excel\Concerns\WithValidation;
 
-class ColisImport implements ToCollection, WithHeadingRow
+class ColisImport implements ToCollection,SkipsEmptyRows, WithHeadingRow,WithValidation
 {
-    protected $user;
-    protected $errors = [];
-    protected $validatedRows = [];
+    protected $maxRows = 2;
 
-
-    public function collection(Collection $rows)
+    public function prepareForValidation($row, $index)
     {
-        // First validate all rows
-        $this->validateAllRows($rows);
-
-        // If any errors, throw exception with all errors
-        if (!empty($this->errors)) {
-            throw new \Exception(implode("\n", $this->errors));
-        }
-
-        // If all rows are valid, process them
-        foreach ($this->validatedRows as $validatedData) {
-            $this->createColis($validatedData);
-        }
+       // Transform the row data to match your store request format
+        $zone_id = $this->getZoneId($row['zone'] ?? null);
+        $data = [
+            'nom_client' => $row['nom_client'] ?? null,
+            'tel_client' => $row['tel_client'] ?? null,
+            'zone_id' => $zone_id,
+            'pricing_id' => $this->getPricingId($zone_id,($row['poids'] ?? null)),
+            'poids' => $row['poids'] ?? null,
+            'horaire' => "normale",
+            'adresse' => $row['adresse'] ?? null,
+            'produit' => $row['produit'] ?? null,
+            'montant' => $row['montant'] ?? null,
+            'essayage' => ($row['essayage'] ?? null) == 'oui',
+            'ouvrir' => ($row['ouvrir'] ?? null) == 'oui',
+            'echange' => ($row['echange'] ?? null) == 'oui',
+            'commentaire_vendeur' => $row['commentaire_vendeur'] ?? null,
+        ];
+        return $data;
     }
 
-    protected function validateAllRows(Collection $rows)
+    public function rules(): array
     {
-        foreach ($rows as $index => $row) {
-            $rowNumber = $index + 2; // +2 because of header row and 0-based index
-
-            try {
-                // Transform the row data to match your store request format
-                $data = [
-                    'nom_client' => $row['nom_client'] ?? null,
-                    'tel_client' => $row['tel_client'] ?? null,
-                    'zone_id' => $this->getZoneId($row['zone'] ?? null),
-                    'pricing_id' => $this->getPricingId($row['pricing'] ?? null),
-                    'frais_livraison' => $row['frais_livraison'] ?? null,
-                    'poids' => $row['poids'] ?? null,
-                    'horaire' => $row['horaire'] ?? null,
-                    'adresse' => $row['adresse'] ?? null,
-                    'produit' => $row['produit'] ?? null,
-                    'montant' => $row['montant'] ?? null,
-                    'essayage' => $this->parseBoolean($row['essayage'] ?? null),
-                    'ouvrir' => $this->parseBoolean($row['ouvrir'] ?? null),
-                    'echange' => $this->parseBoolean($row['echange'] ?? null),
-                    'commentaire_vendeur' => $row['commentaire_vendeur'] ?? null,
-                ];
-
-                // Validate the row data
-                $validator = Validator::make($data, [
+        return [
                     'nom_client' => 'required',
                     'tel_client' => 'required',
-                    'zone_id' => 'required|exists:zones,id',
-                    'pricing_id' => 'required|exists:pricings,id',
-                    'frais_livraison' => 'required|numeric',
+                    'zone_id' => 'required',
+                    'pricing_id' => 'required',
                     'poids' => 'required',
                     'horaire' => 'required',
                     'adresse' => 'required',
@@ -74,25 +58,37 @@ class ColisImport implements ToCollection, WithHeadingRow
                     'essayage' => 'required|boolean',
                     'ouvrir' => 'required|boolean',
                     'echange' => 'required|boolean',
-                ]);
-
-                if ($validator->fails()) {
-                    foreach ($validator->errors()->all() as $error) {
-                        $this->errors[] = "Row {$rowNumber}: {$error}";
-                    }
-                } else {
-                    // Add user data to validated rows
-                    $data['user'] = $this->user;
-                    $this->validatedRows[] = $data;
-                }
-
-            } catch (\Exception $e) {
-                $this->errors[] = "Row {$rowNumber}: " . $e->getMessage();
-            }
-        }
+                ];
     }
 
 
+    public function collection(Collection $rows)
+    {
+
+        $colisService = resolve(ColisService::class);
+        // If all rows are valid, process them
+        foreach ($rows as $validatedData) {
+            $colisService->createColis($validatedData);
+        }
+    }
+
+    public function customValidationMessages()
+    {
+        return [
+            'zone_id.required' => 'Zone est introuvable',
+            'pricing_id.required' => 'Poids sur ce zone est introuvable',
+        ];
+    }
+
+    public function customValidationAttributes()
+    {
+        return [
+            'nom_client' => 'nom client',
+            'tel_client' => 'tel client',
+            'zone_id' => 'zone',
+            'pricing_id' => 'zone et poids'
+        ];
+    }
 
     protected function getZoneId($zoneName)
     {
@@ -100,9 +96,9 @@ class ColisImport implements ToCollection, WithHeadingRow
         return $zone ? $zone->id : null;
     }
 
-    protected function getPricingId($pricingName)
+    protected function getPricingId($zone_id,$poids)
     {
-        $pricing = Pricing::where('name', $pricingName)->first();
+        $pricing = Pricing::where('zone_id', $zone_id)->where('poids',$poids)->first();
         return $pricing ? $pricing->id : null;
     }
 
@@ -113,9 +109,9 @@ class ColisImport implements ToCollection, WithHeadingRow
 
 
 
-    // Optional: Set chunk size for better performance with large files
+    /* // Optional: Set chunk size for better performance with large files
     public function chunkSize(): int
     {
         return 100;
-    }
+    } */
 }

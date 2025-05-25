@@ -8,6 +8,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ColisController;
+use App\Http\Controllers\DashboardVendeurController;
 use App\Http\Controllers\ZoneController;
 use App\Http\Controllers\RetourController;
 use App\Http\Controllers\RamassageController;
@@ -81,6 +82,16 @@ Route::middleware(['auth:sanctum',IsActive::class])->group(function () {
     Route::apiResource('factureVendeur', FactureVendeurController::class);
     Route::post('updateStatutFactureVendeur', [FactureVendeurController::class,'updateStatutFactureVendeur']);
 
+
+    Route::group(['prefix' => 'dashboard'], function () {
+        Route::group(['prefix' => 'vendeur'], function () {
+             Route::get('headerStatistics', [DashboardVendeurController::class,'headerStatistics']);
+             Route::get('suiviColis', [DashboardVendeurController::class,'suiviColis']);
+             Route::get('colisByZonePercent', [DashboardVendeurController::class,'colisByZonePercent']);
+             Route::get('listFacutres', [DashboardVendeurController::class,'listFacutres']);
+             Route::get('stasticsByDay', [DashboardVendeurController::class,'stasticsByDay']);
+        });
+    });
 
 
 
