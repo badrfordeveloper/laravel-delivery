@@ -9,6 +9,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ColisController;
 use App\Http\Controllers\DashboardVendeurController;
+use App\Http\Controllers\DashboardAdminController;
 use App\Http\Controllers\ZoneController;
 use App\Http\Controllers\RetourController;
 use App\Http\Controllers\RamassageController;
@@ -90,6 +91,13 @@ Route::middleware(['auth:sanctum',IsActive::class])->group(function () {
              Route::get('colisByZonePercent', [DashboardVendeurController::class,'colisByZonePercent']);
              Route::get('listFacutres', [DashboardVendeurController::class,'listFacutres']);
              Route::get('stasticsByDay', [DashboardVendeurController::class,'stasticsByDay']);
+        });
+        Route::group(['prefix' => 'admin'], function () {
+             Route::get('headerStatistics', [DashboardAdminController::class,'headerStatistics']);
+             Route::get('suiviColis', [DashboardAdminController::class,'suiviColis']);
+             Route::get('colisByZonePercent', [DashboardAdminController::class,'colisByZonePercent']);
+             Route::get('listFacutres', [DashboardAdminController::class,'listFacutres']);
+             Route::get('stasticsByDay', [DashboardAdminController::class,'stasticsByDay']);
         });
     });
 

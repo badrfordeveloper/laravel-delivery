@@ -60,7 +60,7 @@ class ColisController extends Controller
     public function index(Request $request)
     {
         $textFilters = ['code','nom_client','tel_client'];
-        $selectsFilters = ["statut" =>"colis.statut" ,"livreur_id" => "colis.livreur_id","vendeur_id" => "colis.vendeur_id"];
+        $selectsFilters = ["statut" =>"colis.statut" ,"livreur_id" => "colis.livreur_id","vendeur_id" => "colis.vendeur_id","poids" => "colis.poids","horaire" => "colis.horaire"];
 
 
         $query = Colis::query()->select('colis.*',DB::raw('CONCAT(livreurs.firstName, " ", livreurs.lastName) AS livreur') ,'vendeurs.store AS vendeur')
@@ -303,17 +303,59 @@ class ColisController extends Controller
     {
        Log::info('parametrerColis  : '.json_encode($request->all()));
 
-        // Find the user by ID
+        $request->validate([
+            'id' => 'required',
+            'listParams' => 'required|array',
+            'livreur_id' => 'required_if:listParams,updateLivreur',
+            'frais_livreur' => 'required_if:listParams,updateFraisLivreur',
+            'horaire' => 'required_if:listParams,updateHoraire',
+            'pricing_id' => 'required_if:listParams,updatePoids'
+        ]);
+
+        // Find the colis by ID
         $item = Colis::findOrFail($request->id);
-        if(in_array($item->statut,["ENTREPOT","EN_COURS_LIVRAISON","REPORTE","PAS_REPONSE"])){
-            $item->livreur_id = $request->livreur_id;
-            $item->frais_livreur = $request->frais_livreur;
-            $item->save();
-            return  'Colis bien modifiée' ;
-        }
-        else{
+
+       /*  if(!in_array($item->statut,["ENTREPOT","EN_COURS_LIVRAISON","REPORTE","PAS_REPONSE"])){
             return response()->json(['message' => 'Statut invalide'], 422);
+        } */
+
+        $changes = [];
+
+        // Check each action in listParams and apply changes
+        foreach ($request->listParams as $action) {
+            switch ($action) {
+                case 'updateLivreur':
+                    $item->livreur_id = $request->livreur_id;
+                    $changes[] = 'livreur';
+                    break;
+
+                case 'updateFraisLivreur':
+                    $item->frais_livreur = $request->frais_livreur;
+                    $changes[] = 'frais livreur';
+                    break;
+
+                case 'updateHoraire':
+                    $item->horaire = $request->horaire;
+                    $changes[] = 'horaire';
+                    break;
+
+                case 'updatePoids':
+                    $pricing = Pricing::find($request->pricing_id);
+                    $item->pricing_id = $pricing->id;
+                    $item->poids = $pricing->poids;
+                    $item->frais_livraison = $pricing->frais_livraison;
+                    $item->frais_livreur = $pricing->frais_livreur;
+                    $changes[] = 'poids';
+                    break;
+            }
         }
+
+        if (!empty($changes)) {
+            $item->save();
+            return 'Colis bien modifiée (changements: ' . implode(', ', $changes) . ')';
+        }
+
+        return 'Aucun changement effectué';
     }
 
     public function parametrerGroupColis(Request $request)
@@ -322,15 +364,13 @@ class ColisController extends Controller
 
        $request->validate([
             'ids' => ['required'],
-            'livreur_id' => ['required'],
-            'frais_livreur' => ['required']
-        ]);
+            'livreur_id' => ['required']
+       ]);
        //check status
-       $countColis =  Colis::whereIn('id',$request->ids)->whereIn('statut', ["EN_ATTENTE","ENTREPOT","EN_COURS_LIVRAISON","REPORTE","PAS_REPONSE"])->count();;
+        $countColis =  Colis::whereIn('id',$request->ids)->whereIn('statut', ["ENTREPOT","EN_COURS_LIVRAISON","REPORTE","PAS_REPONSE"])->count();
         if($countColis == count($request->ids)){
             Colis::whereIn('id',$request->ids)->update([
                 'livreur_id' => $request->livreur_id,
-                'frais_livreur' => $request->frais_livreur,
             ]);
             return  'Colis bien modifiée' ;
         }

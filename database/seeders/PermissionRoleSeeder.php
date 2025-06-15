@@ -20,7 +20,7 @@ class PermissionRoleSeeder extends Seeder
         $actions = ['list','create','update','show','delete'];
 
 
-        $otherPermissions = ['action.vendeur','action.livreur','action.gestionnaire','action.admin','retour.scan','vendeur.dashboard'];
+        $otherPermissions = ['action.vendeur','action.livreur','action.gestionnaire','action.admin','retour.scan','vendeur.dashboard','admin.dashboard'];
 
         //generate admin  full permissions
         $fullPermissions = [];
