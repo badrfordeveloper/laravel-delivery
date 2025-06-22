@@ -16,17 +16,17 @@ class UsersRolesSeeder extends Seeder
     {
         $userAdmin = User::create([
             'lastName' =>"admin",
-            'firstName' =>"prenomAdmin",
-            'cin' =>"BB113355",
+            'firstName' =>"",
+            'cin' =>"",
             'email' =>"admin@gmail.com",
             'active' =>true,
-            'password' =>bcrypt("admin@gmail.com"),
-            'phone' =>"0660606006",
+            'password' =>bcrypt("93200sangIKAZ"),
+            'phone' =>"0600000000",
             'store' =>null,
-            'ville' =>"casablanca-anfa",
-            'address' =>"adresse admin",
+            'ville' =>"casablanca",
+            'address' =>"adresse",
         ]);
-        $userGestionnaire1 = User::create([
+     /*    $userGestionnaire1 = User::create([
             'lastName' =>"gestionnaire1",
             'firstName' =>"gestionnaire1",
             'cin' =>"BB111545",
@@ -95,18 +95,18 @@ class UsersRolesSeeder extends Seeder
             'store' =>"store 2",
             'ville' =>"casablanca-zenata",
             'address' =>"adresse vendeur2",
-        ]);
+        ]); */
 
         $roleAdmin = Role::create(['name' =>'admin']);
         $roleGestionnaire = Role::create(['name' =>'gestionnaire']);
         $roleLivreur = Role::create(['name' =>'livreur']);
         $roleVendeur = Role::create(['name' =>'vendeur']);
         $userAdmin->assignRole($roleAdmin);
-        $userGestionnaire1->assignRole($roleGestionnaire);
+        /* $userGestionnaire1->assignRole($roleGestionnaire);
         $userGestionnaire2->assignRole($roleGestionnaire);
         $userLivreur1->assignRole($roleLivreur);
         $userLivreur2->assignRole($roleLivreur);
         $userVendeur1->assignRole($roleVendeur);
-        $userVendeur2->assignRole($roleVendeur);
+        $userVendeur2->assignRole($roleVendeur); */
     }
 }
