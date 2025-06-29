@@ -197,8 +197,12 @@ class ColisController extends Controller
         return $prefix . $formattedNumber;
     }
 
+
+
     public function show($id)
     {
+        // check if user has access to the colis
+        checkColisAccess($id);
 
         $item = Colis::query()->
         select('colis.*',DB::raw('CONCAT(livreurs.firstName, " ", livreurs.lastName) AS livreur'),'livreurs.phone AS tel_livreur' ,'vendeurs.store AS vendeur','vendeurs.phone AS tel_vendeur','ramassages.code AS code_ramassage'   )
@@ -207,6 +211,10 @@ class ColisController extends Controller
             ->leftJoin('ramassages', 'colis.ramassage_id', '=', 'ramassages.id')
             ->where('colis.id', $id)
             ->first();
+         if(is_null($item)){
+            return response()->json(['message' => 'Colis non trouvé'], 403);
+         }
+
             $historiesRamassage = $item->ramassage ? $item->ramassage->histories->toArray() : [];
             $histories = $item->histories->toArray() ?? [];
             $item->colisHistories = array_merge($histories  , $historiesRamassage);
@@ -216,6 +224,8 @@ class ColisController extends Controller
     public function update(Request $request, string $id)
     {
         Log::info('update colis : '.$id.' => '.json_encode($request->all()));
+        // check if user has access to the colis
+        checkColisAccess($id);
 
         $request->validate([
             'nom_client' => 'required',
@@ -292,6 +302,10 @@ class ColisController extends Controller
     public function destroy($id)
     {
         Log::info('delete colis : '.$id);
+
+        // check if user has access to the colis
+        checkColisAccess($id);
+
         // Find the user by ID
         $item = Colis::findOrFail($id);
         $item->delete();
@@ -302,6 +316,9 @@ class ColisController extends Controller
     public function parametrerColis(Request $request)
     {
        Log::info('parametrerColis  : '.json_encode($request->all()));
+
+       // check if user has access to the colis
+       checkColisAccess($request->id);
 
         $request->validate([
             'id' => 'required',
@@ -362,6 +379,9 @@ class ColisController extends Controller
     {
        Log::info('parametrerGroupColis  : '.json_encode($request->all()));
 
+        // check if user has access to the colis
+        checkAccessManager();
+
        $request->validate([
             'ids' => ['required'],
             'livreur_id' => ['required']
@@ -383,6 +403,9 @@ class ColisController extends Controller
     {
         Log::info('updateStatutColis  : '.json_encode($request->all()));
 
+        // check if user has access to the colis
+        checkColisAccess($request->id);
+
         // Find the user by ID
         $item = Colis::findOrFail($request->id);
         $oldStatut = $item->statut;
@@ -393,10 +416,6 @@ class ColisController extends Controller
         }
 
         $user = auth()->user();
-
-
-
-
 
         if($request->statut == "COMMENTAIRE"){
             //add to history
@@ -470,6 +489,9 @@ class ColisController extends Controller
 
     public function scannerRetourEntrepot(Request $request)
     {
+        // check if user has access to the colis
+        checkAccessManager();
+
         Log::info('scannerRetourEntrepot :  => '.json_encode($request->all()));
 
         $result=["success"=>[],"errors"=>[],"colisError"=>[]];

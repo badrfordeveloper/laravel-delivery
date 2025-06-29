@@ -185,7 +185,7 @@ class RamassageController extends Controller
         */
 
 
-        $item = Ramassage::query()->select('ramassages.*','ramasseurs.lastName AS ramasseur','ramasseurs.phone AS tel_ramasseur' ,'vendeurs.lastName AS vendeur' )
+        $item = Ramassage::query()->select('ramassages.*','ramasseurs.lastName AS ramasseur','ramasseurs.phone AS tel_ramasseur' ,'vendeurs.store AS vendeur' )
             ->leftJoin('users as ramasseurs', 'ramassages.ramasseur_id', '=', 'ramasseurs.id')
             ->leftJoin('users as vendeurs', 'ramassages.vendeur_id', '=', 'vendeurs.id')
             ->where('ramassages.id', $id)

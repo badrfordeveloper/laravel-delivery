@@ -25,11 +25,21 @@ class ZoneController extends Controller
         }
         $query->with('pricings');
         $query->orderBy('id','desc');
-        $result = $query->paginate($request->itemsPerPage);
-        return response()->json([
-            'items' => $result->items(),
-            'total' => $result->total(),
-        ]);
+        if($request->has('itemsPerPage')){
+            $result = $query->paginate($request->itemsPerPage);
+
+            return response()->json([
+                'items' => $result->items(),
+                'total' => $result->total(),
+            ]);
+        }else{
+            $result = $query->get();
+            return response()->json([
+                'items' => $result,
+                'total' => $result->count(),
+            ]);
+        }
+
     }
 
     public function store(Request $request)
